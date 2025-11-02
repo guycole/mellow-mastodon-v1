@@ -7,8 +7,7 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
-HOME_DIR="/home/gsc/Documents/github"
-#HOME_DIR="/Users/gsc/Documents/github"
+HOME_DIR="${HOME}/Documents/github"
 #
 COOKED_DIR="cooked"
 PROCESSED_DIR="processed"

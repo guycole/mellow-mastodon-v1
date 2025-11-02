@@ -16,7 +16,6 @@ TODAY=$(date '+%Y-%m-%d')
 FILE_NAME="$1-${TODAY}.tgz"
 #
 EXPORT_DIR="export"
-EXPORT_DIR="/mnt/sda/gsc/mellow/mastodon/export"
 PEAKER_DIR="peaker"
 WORK_DIR="/var/mellow/mastodon"
 #

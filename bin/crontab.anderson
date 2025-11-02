@@ -1,6 +1,6 @@
 #
-*/6 * * * * /home/gsc/Documents/github/mellow-mastodon/bin/big-search01.sh > /dev/null 2>&1
-13 * * * * /home/gsc/Documents/github/mellow-mastodon/bin/csv2json.sh > /dev/null 2>&1
+*/6 * * * * /home/mellow/Documents/github/mellow-mastodon/bin/big-search01.sh > /dev/null 2>&1
+13 * * * * /home/mellow/Documents/github/mellow-mastodon/bin/csv2json.sh > /dev/null 2>&1
 27 * * * * /home/gsc/Documents/github/mellow-mastodon/bin/pruner.sh > /dev/null 2>&1
 39 23 * * * /home/gsc/Documents/github/mellow-mastodon/bin/archiver.sh big-search01-anderson01 > /dev/null 2>&1
 51 2,8,14,20 * * * /home/gsc/Documents/github/mellow-mastodon/bin/wombat01-to-s3.sh > /dev/null 2>&1
