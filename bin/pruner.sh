@@ -12,7 +12,6 @@ HOME_DIR="${HOME}/Documents/github"
 COOKED_DIR="cooked"
 PROCESSED_DIR="processed"
 WORK_DIR="/var/mellow/mastodon"
-#WORK_DIR="/mnt/sda/gsc/mellow/mastodon"
 #
 echo "begin pruner"
 #
@@ -26,5 +25,5 @@ mkdir ${COOKED_DIR}
 rm -rf ${PROCESSED_DIR}
 mkdir ${PROCESSED_DIR}
 # 
-echo "end csv2json"
+echo "end pruner"
 #

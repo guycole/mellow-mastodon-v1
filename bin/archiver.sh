@@ -31,3 +31,7 @@ mkdir ${PEAKER_DIR}
 #
 echo "end archive"
 #
+# reboot daily because raspbian is unstable
+echo "reboot"
+sudo systemctl reboot
+#

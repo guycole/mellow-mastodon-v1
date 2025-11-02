@@ -7,7 +7,6 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
-HOME_DIR="${HOME}/Documents/github/mellow-mastodon"
 VARMEL_DIR=/var/mellow/mastodon
 #
 BIN_SIZE=10k
