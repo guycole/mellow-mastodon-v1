@@ -10,13 +10,11 @@ PATH=/bin:/usr/bin:/etc:/usr/local/bin:/opt/homebrew/bin/aws; export PATH
 DEST_BUCKET=s3://mellow-mastodon-uw2-m7766.braingang.net/fresh/
 #
 EXPORT_DIR="export"
-EXPORT_DIR="/mnt/sda/gsc/mellow/mastodon/export"
 PROCESSED_DIR="processed"
 SOURCE_DIR="cooked"
 WORK_DIR="/var/mellow/mastodon"
 #
-#cd ${WORK_DIR}/${EXPORT_DIR}
-cd ${EXPORT_DIR}
+cd ${WORK_DIR}/${EXPORT_DIR}
 #
 echo "start s3 transfer" 
 aws s3 mv . $DEST_BUCKET --recursive --profile=wombat01

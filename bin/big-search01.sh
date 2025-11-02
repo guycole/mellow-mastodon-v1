@@ -7,10 +7,8 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
-HOME_DIR="/home/gsc/Documents/github/mellow-mastodon"
-#HOME_DIR="/Users/gsc/Documents/github/mellow-mastodon"
+HOME_DIR="${HOME}/Documents/github/mellow-mastodon"
 VARMEL_DIR=/var/mellow/mastodon
-#VARMEL_DIR=/mnt/sda/gsc/mellow/mastodon
 #
 BIN_SIZE=10k
 DURATION=5m
