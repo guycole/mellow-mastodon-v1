@@ -7,7 +7,7 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
-VARMEL_DIR=/var/mellow/mastodon
+FRESH_DIR=/var/wombat/fresh/mastodon
 #
 BIN_SIZE=10k
 DURATION=5m
@@ -24,7 +24,15 @@ RTL_POWER="/usr/local/bin/rtl_power"
 #
 POWER_FILE_NAME="${UUID}.csv"
 #
-time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
+WORK_DIR="/home/wombat/Documents/github/mellow-mastodon/src/collector"
 #
-mv /tmp/$POWER_FILE_NAME $VARMEL_DIR/fresh/$POWER_FILE_NAME
+echo "start collection"
+sleep 13
+cd $WORK_DIR
+source venv/bin/activate
+python3 ./collector.py config.yaml ${UUID}
+#
+#time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
+#
+#mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
 #
