@@ -32,7 +32,7 @@ cd $WORK_DIR
 source venv/bin/activate
 python3 ./collector.py ${UUID}
 #
-#time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
+time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
 #
-#mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
+mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
 #
