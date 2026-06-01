@@ -39,10 +39,8 @@ class Collector:
         except Exception as error:
             print(error)
 
-    def execute(self) -> None:
+    def execute(self, base_file_name: str) -> None:
         print(f"collector execute")
-
-        base_file_name = str(uuid.uuid4())
         print(f"base filename: {base_file_name}")
 
         outfile_json = f"{self.fresh_dir}/{base_file_name}.json"
@@ -83,16 +81,18 @@ class Collector:
 # argv[1] = configuration filename
 #
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        file_name = sys.argv[1]
-    else:
-        file_name = "config.yaml"
+    if len(sys.argv) != 3:
+        print("usage: python3 collector.py <configuration filename> <uuid>")
+        sys.exit(1)
 
+    file_name = sys.argv[1]
+    base_name = sys.argv[2]
+   
     with open(file_name, "r") as in_file:
         try:
             configuration = yaml.load(in_file, Loader=SafeLoader)
             collector = Collector(configuration)
-            collector.execute()
+            collector.execute(base_name)
         except yaml.YAMLError as error:
             print(error)
 
