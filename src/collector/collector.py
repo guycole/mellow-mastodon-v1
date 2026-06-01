@@ -81,12 +81,12 @@ class Collector:
 # argv[1] = configuration filename
 #
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("usage: python3 collector.py <configuration filename> <uuid>")
+    if len(sys.argv) != 2:
+        print("usage: python3 collector.py <uuid>")
         sys.exit(1)
 
-    file_name = sys.argv[1]
-    base_name = sys.argv[2]
+    file_name = "config.yaml"
+    base_name = sys.argv[1]
    
     with open(file_name, "r") as in_file:
         try:
