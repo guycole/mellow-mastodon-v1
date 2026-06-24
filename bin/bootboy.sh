@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Title: bootboy.sh
-# Description: configure 
+# Description: configure collector
 # Development Environment: Ubuntu 22.04.05 LTS
 # Author: Guy Cole (guycole at gmail dot com)
 #

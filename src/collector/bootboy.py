@@ -102,7 +102,6 @@ class BootBoy:
 #
 if __name__ == "__main__":
     target = socket.gethostname()
-#    target = "pi4k"
 
     bb = BootBoy()
     bb.execute(target)
