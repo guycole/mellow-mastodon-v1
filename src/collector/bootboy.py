@@ -67,7 +67,7 @@ class BootBoy:
         import subprocess
 
         crontab_entry = (
-            "*/10 * * * * $HOME/github/mellow-mastodon-v1/bin/collector.sh > /dev/null 2>&1"
+            "*/10 * * * * $HOME/github/mellow-mastodon-v1/bin/big-search01.sh > /dev/null 2>&1"
         )
 
         # Always overwrite — collector is dedicated to this workload and must have
