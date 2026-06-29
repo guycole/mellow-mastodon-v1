@@ -34,7 +34,7 @@ class BootBoy:
         host_name = config_data.get("hostName", target)
         host_type = config_data.get("type", "xxx")
 
-        if task == "mastodon-vi-bs1":
+        if task == "mastodon-v1-bs1":
             mode = "big-search01"
         else:
             mode = "default"
