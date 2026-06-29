@@ -21,7 +21,7 @@ class Collector:
         self.fresh_dir = args["freshDir"]
 
         self.host_name = args['equipment']["hostName"]
-        self.host_type = args['equipment']["type"]
+        self.host_type = args['equipment']["hostType"]
 
         self.altitude = args["geoLoc"]["altitude"]
         self.latitude = args["geoLoc"]["latitude"]
@@ -29,7 +29,9 @@ class Collector:
         self.site_name = args["geoLoc"]["siteName"]
 
         self.antenna = args["receiver"]["antenna"]
-        self.receiver_id = args["receiver"]["receiver_id"]
+        self.receiver_id = args["receiver"]["receiverId"]
+        self.receiver_mode = args["receiver"]["mode"]
+        self.receiver_task = args["receiver"]["task"]
         self.receiver_type = args["receiver"]["type"]
 
     def json_file_writer(self, file_name: str, json_data: dict[str, any]) -> None:
@@ -53,10 +55,10 @@ class Collector:
         results = {
             "equipment": {
                 "antenna": self.antenna,  
-                "receiver_id": self.receiver_id,
-                "receiver_type": self.receiver_type,
-                "platform": self.host_type,
-                "hostName": self.host_name  
+                "receiverId": self.receiver_id,
+                "receiverType": self.receiver_type,
+                "hostName": self.host_name,
+                "hostType": self.host_type,
             },
             "geoLoc": {
                 "altitude": self.altitude,
@@ -71,7 +73,7 @@ class Collector:
             "crate": self.crate_name,
             "fileName": f"{base_file_name}.json",
             "mode": "big-search01",
-            "project": "mastodon-v1",
+            "project": self.receiver_task,
             "version": 1
         }
 

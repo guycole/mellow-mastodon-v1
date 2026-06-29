@@ -24,7 +24,7 @@ RTL_POWER="/usr/local/bin/rtl_power"
 #
 POWER_FILE_NAME="${UUID}.csv"
 #
-WORK_DIR="/home/wombat/Documents/github/mellow-mastodon/src/collector"
+WORK_DIR="$HOME/github/mellow-mastodon-v1/src/collector"
 #
 echo "start collection"
 sleep 13
