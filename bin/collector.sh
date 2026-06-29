@@ -17,7 +17,7 @@ CONFIG_FILE="$WORK_DIR/config.yaml"
 echo "start collection"
 sleep 13
 #
-RECEIVER_MODE=$(yq '.receiver.mode' "$CONFIG_FILE")
+RECEIVER_MODE=$(yq -r '.receiver.mode' "$CONFIG_FILE")
 echo "receiver mode: $RECEIVER_MODE"
 #
 if [ "$RECEIVER_MODE" = "big-search01" ]; then
