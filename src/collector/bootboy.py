@@ -28,10 +28,16 @@ class BootBoy:
 
         # Compose new config dict for YAML output
         receiver = config_data.get("receiver", {})
+        task = receiver.get("task", "xxx")
         geo_loc = config_data.get("geoLoc", {})
         crate_name = config_data.get("crateName", "xxx")
         host_name = config_data.get("hostName", target)
         host_type = config_data.get("type", "xxx")
+
+        if task == "mastodon-vi-bs1":
+            mode = "big-search01"
+        else:
+            mode = "default"
 
         yaml_config = {
             "crateName": crate_name,
@@ -41,7 +47,7 @@ class BootBoy:
             },
             "receiver": {
                 "antenna": receiver.get("antenna", "xxx"),
-                "mode": "default",
+                "mode": mode,
                 "receiverId": receiver.get("id", "xxx"),
                 "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
@@ -67,7 +73,7 @@ class BootBoy:
         import subprocess
 
         crontab_entry = (
-            "*/10 * * * * $HOME/github/mellow-mastodon-v1/bin/big-search01.sh > /dev/null 2>&1"
+            "*/6 * * * * $HOME/github/mellow-mastodon-v1/bin/collector.sh > /dev/null 2>&1"
         )
 
         # Always overwrite — collector is dedicated to this workload and must have
