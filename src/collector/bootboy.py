@@ -17,7 +17,7 @@ from yaml.loader import SafeLoader
 
 class BootBoy:
 
-    def configuration(self, target: str) -> None:
+    def configuration(self, target: str) -> dict[str, any]:
         print(f"BootBoy: configuring {target}")
 
         # Build the path to the admin JSON file
@@ -32,24 +32,32 @@ class BootBoy:
 
         # Compose new config dict for YAML output
         receiver = config_data.get("receiver", {})
-        geoLoc = config_data.get("geoLoc", {})
-        crateName = config_data.get("crateName", "xxx")
-        hostName = config_data.get("hostName", target)
-        type_val = config_data.get("type", "xxx")
+        task = receiver.get("task", "xxx")
+        geo_loc = config_data.get("geoLoc", {})
+        crate_name = config_data.get("crateName", "xxx")
+        host_name = config_data.get("hostName", target)
+        host_type = config_data.get("type", "xxx")
+
+        if task == "mastodon-v1-bs1":
+            mode = "big-search01"
+        else:
+            mode = "default"
 
         yaml_config = {
-            "crateName": crateName,
+            "crateName": crate_name,
             "equipment": {
-                "hostName": hostName,
-                "type": type_val,
+                "hostName": host_name,
+                "hostType": host_type,
             },
             "receiver": {
                 "antenna": receiver.get("antenna", "xxx"),
-                "receiver_id": receiver.get("id", "xxx"),
+                "mode": mode,
+                "receiverId": receiver.get("id", "xxx"),
+                "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
             },
-            "freshDir": "/var/wombat/fresh/hyena",
-            "geoLoc": geoLoc,
+            "freshDir": "/var/wombat/fresh/mastodon",
+            "geoLoc": geo_loc,
         }
 
         # Write to config.yaml in the current directory
@@ -61,28 +69,42 @@ class BootBoy:
             print(f"Error writing config.yaml: {e}")
             sys.exit(1)
 
+        return {
+            "receiver_task": receiver.get("task", "xxx"),
+        }
+
     def crontab(self) -> None:
         import subprocess
-        crontab_entry = "*/6 * * * * $HOME/Documents/github/mellow-mastodon/bin/big-search01.sh > /dev/null 2>&1\n"
 
+        crontab_entry = (
+            "*/6 * * * * $HOME/github/mellow-mastodon-v1/bin/collector.sh > /dev/null 2>&1"
+        )
+
+        # Always overwrite — collector is dedicated to this workload and must have
+        # exactly one cron entry.
+        new_crontab = crontab_entry + "\n"
         try:
-            proc = subprocess.run(["crontab", "-u", "wombat", "-"], input=crontab_entry, text=True)
+            proc = subprocess.run(
+                ["crontab", "-u", "wombat", "-"], input=new_crontab, text=True
+            )
             if proc.returncode == 0:
-                print("Crontab updated successfully for wombat.")
+                print("Crontab updated for wombat.")
             else:
                 print("Failed to update wombat's crontab.")
         except Exception as e:
             print(f"Error updating wombat's crontab: {e}")
 
     def execute(self, target: str) -> None:
-        self.configuration(target)
+        config = self.configuration(target)
         self.crontab()
 
+
 #
-# 
+#
 #
 if __name__ == "__main__":
     target = socket.gethostname()
+    # target = "pi4k"
 
     bb = BootBoy()
     bb.execute(target)
