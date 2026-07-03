@@ -7,7 +7,7 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
-WORK_DIR="/home/wombat/Documents/github/mellow-mastodon/src/collector"
+WORK_DIR="/home/wombat/github/mellow-mastodon/src/collector"
 #
 echo "start bootboy"
 
