@@ -7,6 +7,9 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
+hostname=$(hostname)
+logger -p local3.info "mastodon big-search01 $hostname"
+#
 FRESH_DIR=/var/wombat/fresh/mastodon
 #
 BIN_SIZE=10k

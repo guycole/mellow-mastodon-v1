@@ -7,15 +7,12 @@
 #
 PATH=/bin:/usr/bin:/etc:/usr/local/bin; export PATH
 #
+hostname=$(hostname)
+logger -p local3.info "bootboy mastodon $hostname"
+#
 WORK_DIR="/home/wombat/github/mellow-mastodon-v1/src/collector"
 #
 echo "start bootboy"
-
-if ! command -v systemctl >/dev/null 2>&1; then
-	echo "systemctl not found" >&2
-	exit 1
-fi
-
 cd $WORK_DIR
 source venv/bin/activate
 python3 ./bootboy.py
