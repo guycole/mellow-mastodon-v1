@@ -18,7 +18,7 @@ batabat
 # create tablespace mastodon location '/mnt/pp1/postgres/mastodon';
 # create tablespace mastodon location '/Library/PostgreSQL/pg_tablespace/mastodon';
 
-createdb mastodon -O mastodon_admin -D mastodon -E UTF8 -T template0 -l C
+createdb mastodon -O mastodon_admin  -E UTF8 -T template0 -l C
 
 # psql -h localhost -p 5432 -U mastodon_admin -d mastodon
 # psql -h localhost -p 5432 -U mastodon_client -d mastodon

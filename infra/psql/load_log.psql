@@ -2,20 +2,15 @@
 -- Title: load_log.psql
 -- Description: file load history
 --
-create table mastodon_v1.load_log (
-  id                bigserial    primary key,
-  file_name         varchar(64)  unique not null,
-  time_stamp_epoch  bigint       not null,
-  population        int          not null,
-  project           varchar(16)  not null,
-  equipment_id      bigint       not null,
-  constraint equipment_id foreign key(equipment_id) references mastodon_v1.equipment(id),
-  schema_version    smallint     not null,
-  site_id           bigint       not null,
-  constraint site_id foreign key(site_id) references mastodon_v1.site(id)
-) tablespace mastodon;
+create table mastodon_load_log (
+  id         bigserial    primary key,
+  file_name  varchar(48)  unique not null,
+  host_name  varchar(32)  not null,
+  obs_time   timestamp    not null, 
+  project    varchar(32)  not null,
+);
 
-grant select, insert, update, delete on mastodon_v1.load_log to mastodon_client;
-grant usage, select on sequence mastodon_v1.load_log_id_seq to mastodon_client;
+grant select, insert, update, delete on mastodon_load_log to mastodon_client;
+grant usage, select on sequence mastodon_load_log_id_seq to mastodon_client;
 
-create unique index load_log_ts_epoch_project_site on mastodon_v1.load_log(time_stamp_epoch, project, equipment_id, site_id);
+create unique index obs_time_host_project on mastodon_load_log(obs_time, host_name, project);
