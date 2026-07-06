@@ -119,6 +119,8 @@ class Validator:
         os.chdir(self.fresh_dir)
         targets = sorted(os.listdir("."))
         logger.info(f"{len(targets)} files noted")
+        if len(targets) < 2:
+            return
 
         time_now = int(time.time())
         threshold = 60 * 10
@@ -146,7 +148,8 @@ class Validator:
                 else:
                     print(f"skip unripe file")
             else:
-                self.file_failure(target1)
+                print(f"filenames do not match")
+                #self.file_failure(target1)
 
             ndx1 += 1
 
