@@ -123,7 +123,13 @@ class Validator:
             return
 
         time_now = int(time.time())
-        threshold = 60 * 10
+        threshold = 60 * 10 # 10 minutes
+
+        # mastodon files arrive in pairs: one .json and one .csv file sharing
+        # the same base name.  The files will not arrive at the same time, so 
+        # if one file is missing I need to wait for the late file to arrive.
+        # I iterate through sorted filenames to discover matching pairs.
+        # Files are given ten minutes to arrive.
 
         ndx1 = 0
         while ndx1 < len(targets)-1:
@@ -147,9 +153,11 @@ class Validator:
                     ndx1 += 1
                 else:
                     print(f"skip unripe file")
+                    ndx1 += 1  # skip both files of the unripe pair
             else:
                 print(f"filenames do not match")
-                #self.file_failure(target1)
+                if delta1 > threshold:
+                    self.file_failure(target1)
 
             ndx1 += 1
 
