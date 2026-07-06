@@ -8,6 +8,7 @@ import logging
 import datetime
 import json
 import os
+import time
 
 from postgres import PostGres
 
@@ -119,16 +120,31 @@ class Validator:
         targets = sorted(os.listdir("."))
         logger.info(f"{len(targets)} files noted")
 
+        time_now = int(time.time())
+        threshold = 60 * 10
+
         ndx1 = 0
         while ndx1 < len(targets)-1:
             # valid files will arrive in pairs
             target1 = targets[ndx1]
             target2 = targets[ndx1+1]
+            print(f"testing {target1} {target2}")
+
+            target1_mtime = os.path.getmtime(target1)
+            delta1 = time_now - target1_mtime
+
+            target2_mtime = os.path.getmtime(target2)
+            delta2 = time_now - target2_mtime
 
             temp = target1.split(".")
             if target2.startswith(temp[0]):
-                self.file_processor(target1, target2)
-                ndx1 += 1
+                print("filenames match") 
+                if delta1 > threshold and delta2 > threshold:
+                    print("process ripe files")
+                    self.file_processor(target1, target2)
+                    ndx1 += 1
+                else:
+                    print(f"skip unripe file")
             else:
                 self.file_failure(target1)
 
