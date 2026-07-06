@@ -42,8 +42,8 @@ class MastodonApp:
         elif self.stunt_box == "validator":
             validator = Validator(self.postgres)
             validator.execute()
-            koala = Koala()
-            koala.execute()
+#            koala = Koala()
+#            koala.execute()
         else:
             logger.error(f"invalid stunt_box option:{self.stunt_box}")
             return

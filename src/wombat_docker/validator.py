@@ -63,14 +63,10 @@ class Validator:
                 return False
             else:
                 load_log = {
-                    "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
-                    "file_time": self.raw_buffer["timeStamp"]["iso8601"],
-                    "file_type": self.raw_buffer["project"],
                     "host_name": self.raw_buffer["equipment"]["hostName"],
-                    "load_time": datetime.datetime.now(),
-                    "obs_quantity": len(self.raw_buffer["observations"]),
-                    "site": self.raw_buffer["geoLoc"]["siteName"],
+                    "obs_time": self.raw_buffer["timeStamp"]["iso8601"],
+                    "project": self.raw_buffer["project"],
                 }
 
                 self.postgres.load_log_insert(load_log)
@@ -100,11 +96,11 @@ class Validator:
             self.file_failure(file_name1)
             self.file_failure(file_name2)
             return
-        
-        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "mastodon-v1":
+       
+        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "mastodon-v1-bs1":
             pass
         else:
-            logger.warning(f"invalid version or project for {test_file_name}")
+            logger.warning(f"invalid version or project for {test_file_name} {self.raw_buffer['project']}")
             self.file_failure(file_name1)
             self.file_failure(file_name2)
             return

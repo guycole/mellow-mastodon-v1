@@ -7,7 +7,7 @@ create table mastodon_load_log (
   file_name  varchar(48)  unique not null,
   host_name  varchar(32)  not null,
   obs_time   timestamp    not null, 
-  project    varchar(32)  not null,
+  project    varchar(32)  not null
 );
 
 grant select, insert, update, delete on mastodon_load_log to mastodon_client;

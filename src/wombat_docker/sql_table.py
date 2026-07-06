@@ -45,26 +45,19 @@ class LoadLog(Base):
     __tablename__ = "mastodon_load_log"
 
     id = Column(Integer, primary_key=True)
-    epoch_seconds = Column(BigInteger)
     file_name = Column(String)
-    file_time = Column(DateTime)
-    file_type = Column(String)
     host_name = Column(String)
-    load_time = Column(DateTime)
-    obs_quantity = Column(Integer)
-
+    obs_time = Column(DateTime)
+    project = Column(String)
 
     def __init__(self, args: dict[str, any]):
-        self.epoch_seconds = args["epoch_seconds"]
         self.file_name = args["file_name"]
-        self.file_time = args["file_time"]
-        self.file_type = args["file_type"]
         self.host_name = args["host_name"]
-        self.load_time = args.get("load_time", datetime.now())
-        self.obs_quantity = args["obs_quantity"]
+        self.obs_time = args["obs_time"]
+        self.project = args["project"]
        
     def __repr__(self):
-        return f"load_log({self.file_name} {self.file_time} {self.file_type} {self.host_name})"
+        return f"load_log({self.file_name} {self.host_name} {self.project})"
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***
