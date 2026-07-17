@@ -13,7 +13,6 @@ WORK_DIR="$HOME/github/mellow-mastodon-v1/src/collector"
 CONFIG_FILE="$WORK_DIR/config.yaml"
 #
 echo "start collection"
-sleep 13
 #
 RECEIVER_TASK=$(yq -r '.receiver.task' "$CONFIG_FILE")
 echo "receiver task: $RECEIVER_TASK"
