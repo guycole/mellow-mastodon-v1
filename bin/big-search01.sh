@@ -29,7 +29,7 @@ POWER_FILE_NAME="${UUID}.csv"
 #
 # perform collection
 logger -p local3.info "mastodon big-search01 $HOST_NAME $SCRIPT_NAME $EPOCH_SECONDS $TODAY $UUID"
-#time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
+time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
 #
 # perform analysis
 WORK_DIR="$HOME/github/mellow-mastodon-v1/src/collector"
@@ -38,5 +38,5 @@ cd $WORK_DIR
 source venv/bin/activate
 python3 ./collector.py ${UUID} ${EPOCH_SECONDS}
 #
-#mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
+mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
 #
