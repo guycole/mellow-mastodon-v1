@@ -20,22 +20,23 @@ REPORT=1m
 #
 HOST_NAME=$(hostname)
 SCRIPT_NAME=$0
+EPOCH_SECONDS=$(date '+%s')
 TODAY=$(date '+%Y-%m-%d')
 UUID=$(uuidgen)
 #
 RTL_POWER="/usr/local/bin/rtl_power"
-#
 POWER_FILE_NAME="${UUID}.csv"
 #
+# perform collection
+logger -p local3.info "mastodon big-search01 $HOST_NAME $SCRIPT_NAME $EPOCH_SECONDS $TODAY $UUID"
+#time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
+#
+# perform analysis
 WORK_DIR="$HOME/github/mellow-mastodon-v1/src/collector"
 #
-echo "start collection"
-sleep 13
 cd $WORK_DIR
 source venv/bin/activate
-python3 ./collector.py ${UUID}
+python3 ./collector.py ${UUID} ${EPOCH_SECONDS}
 #
-time $RTL_POWER -f $FREQ_LOW:$FREQ_HIGH:$BIN_SIZE -i $REPORT -e $DURATION > /tmp/$POWER_FILE_NAME
-#
-mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
+#mv /tmp/$POWER_FILE_NAME $FRESH_DIR/$POWER_FILE_NAME
 #
