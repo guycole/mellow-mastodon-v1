@@ -15,14 +15,14 @@ CONFIG_FILE="$WORK_DIR/config.yaml"
 echo "start collection"
 sleep 13
 #
-RECEIVER_MODE=$(yq -r '.receiver.mode' "$CONFIG_FILE")
-echo "receiver mode: $RECEIVER_MODE"
+RECEIVER_TASK=$(yq -r '.receiver.task' "$CONFIG_FILE")
+echo "receiver task: $RECEIVER_TASK"
 #
-if [ "$RECEIVER_MODE" = "big-search01" ]; then
+if [ "$RECEIVER_TASK" = "mastodon-v1-bs1" ]; then
     echo "invoking big-search01"
     $BIN_DIR/big-search01.sh
 else
-    echo "unknown receiver mode: $RECEIVER_MODE"
+    echo "unknown receiver task: $RECEIVER_TASK"
 fi
 #
 echo "end collection"
