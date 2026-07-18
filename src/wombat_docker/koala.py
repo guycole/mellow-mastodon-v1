@@ -57,7 +57,7 @@ class Koala:
             "hostName": self.raw_buffer.get("equipment", {}).get("hostName", "unknown"),
             "project": self.raw_buffer.get("project", "unknown"),
             "version": self.raw_buffer.get("version", 0),
-            "wifi": self.raw_buffer.get("observations", []),
+            "peakers": self.raw_buffer.get("peakers", []),
         }
 
         return result
