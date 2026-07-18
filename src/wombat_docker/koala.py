@@ -15,7 +15,7 @@ logger = logging.getLogger("koala")
 class Koala:
 
     def __init__(self):        
-        self.koala_dir = os.environ.get("FRESH_DIR", "/var/wombat/mastodon/koala")
+        self.koala_dir = os.environ.get("KOALA_DIR", "/var/wombat/mastodon/koala")
         self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/mastodon/success")
 
         # UID/GID are provided by container entrypoint; default keeps local behavior.
