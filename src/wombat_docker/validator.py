@@ -93,8 +93,8 @@ class Validator:
 
                 self.postgres.daily_score_insert_or_update(daily_score)
 
-                if len(self.raw_buffer["observations"]) < 1:
-                    logger.info("skipping file with no observations")
+                if len(self.raw_buffer["peakers"]) < 1:
+                    logger.info("skipping file with no peakers")
                     return False
 
                 return True
