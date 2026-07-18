@@ -13,33 +13,31 @@ import time
 from postgres import PostGres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("mastodon")
+logger = logging.getLogger("validator")
 
 class Validator:
 
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
-        # path from inside docker container
-        self.failure_dir = "/mnt/wombat/failure/"
-        self.fresh_dir = "/mnt/wombat/fresh/mastodon"
-        self.success_dir = "/mnt/wombat/mastodon/success/"
-
-        # path for mac development
-        # self.failure_dir = "/var/wombat/failure/"
-        # self.fresh_dir = "/var/wombat/fresh/mastodon"
-        # self.success_dir = "/var/wombat/mastodon/success/"
+        self.failure_dir = os.environ.get("FAILURE_DIR", "/var/wombat/failure")
+        self.fresh_dir = os.environ.get("FRESH_DIR", "/var/wombat/fresh/mastodon")
+        self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/mastodon/success")
 
         self.failure = 0
         self.success = 0
 
-    def file_failure(self, file_name: str):
+    def file_failure1(self, file_name: str) -> None:
         logger.info(f"file failure:{file_name}")
 
         self.failure += 1
-        os.rename(file_name, self.failure_dir + file_name)
+        os.rename(file_name, self.failure_dir + "/" + file_name)
 
-    def file_success(self, file_name1: str, file_name2: str):
+    def file_failure(self, file_name1: str, file_name2: str) -> None:
+        self.file_failure1(file_name1)
+        self.file_failure1(file_name2)
+
+    def file_success(self, file_name1: str, file_name2: str) -> None:
         #logger.info(f"file success:{file_name1}, {file_name2}")
 
         self.success += 1
@@ -57,107 +55,117 @@ class Validator:
         return True
 
     def load_log_test(self, test_file_name: str) -> bool:
+        logger.info(f"load_log_test for file: {test_file_name}")
+
         try:
             candidate = self.postgres.load_log_select_by_file_name(test_file_name)
-            if candidate is not None:
-                logger.info(f"skippping already processed:{test_file_name}")
-                return False
-            else:
+            if candidate is None:
+                logger.info(f"processing new file:{test_file_name}")
+
+                geo_loc = self.postgres.geo_loc_select_by_site(self.raw_buffer["geoLoc"]["siteName"])
+                if len(geo_loc) == 0:
+                    print("must insert geo_loc for site:", self.raw_buffer["geoLoc"]["siteName"])
+                    return False
+                
                 load_log = {
+                    "crate_name": self.raw_buffer["crateName"],
+                    "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
+                    "geo_loc_id": geo_loc[0].id,
                     "host_name": self.raw_buffer["equipment"]["hostName"],
+                    "load_time": datetime.datetime.now(),
+                    "mode": self.raw_buffer["job"]["mode"],
                     "obs_time": self.raw_buffer["timeStamp"]["iso8601"],
-                    "project": self.raw_buffer["project"],
+                    "peaker_quantity": len(self.raw_buffer["peakers"]),
+                    "site_name": self.raw_buffer["geoLoc"]["siteName"],
+                    "task": self.raw_buffer["job"]["task"],
                 }
 
                 self.postgres.load_log_insert(load_log)
 
+                daily_score = {
+                    "crate_name": self.raw_buffer["crateName"],
+                    "file_quantity": 1,
+                    "host_name": self.raw_buffer["equipment"]["hostName"],
+                    "peaker_quantity": len(self.raw_buffer["peakers"]),
+                    "score_date": datetime.date.fromisoformat(self.raw_buffer["timeStamp"]["iso8601"][:10]),
+                }
+
+                self.postgres.daily_score_insert_or_update(daily_score)
+
+                if len(self.raw_buffer["peakers"]) < 1:
+                    logger.info("skipping file with no peakers")
+                    return False
+
                 return True
+            else:
+                logger.info(f"skippping already processed:{test_file_name}")
+                return False               
         except Exception as error:
             logger.error(f"postgres insert failed for {test_file_name}: {error}")        
         
         return False
 
     def file_processor(self, file_name1: str, file_name2: str) -> None:
+        logger.info(f"processing files: {file_name1} {file_name2}")
+
         if os.path.isfile(file_name1) is False:
             logger.warning(f"skipping non-file:{file_name1}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
 
         if os.path.isfile(file_name2) is False:
             logger.warning(f"skipping non-file:{file_name2}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
-        
+
+        if os.path.getsize(file_name1) < 1 or os.path.getsize(file_name2) < 1:
+            logger.warning(f"skipping empty file(s):{file_name1} {file_name2}")
+            self.file_failure(file_name1, file_name2)
+            return
+
         test_file_name = file_name1 if file_name1.endswith(".json") else file_name2
         if not self.file_reader(test_file_name):
             logger.warning(f"file read failed for {test_file_name}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
-       
-        if self.raw_buffer["version"] == 1 and self.raw_buffer["project"] == "mastodon-v1-bs1":
-            pass
-        else:
-            logger.warning(f"invalid version or project for {test_file_name} {self.raw_buffer['project']}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+
+        try:
+            if self.raw_buffer["version"] == 1 and self.raw_buffer["job"]["project"].startswith("mastodon-v1"):
+                pass
+            else:
+                logger.warning(f"invalid version or project for {test_file_name} {self.raw_buffer['project']}")
+                self.file_failure(file_name1, file_name2)
+                return        
+        except Exception as error:
+            logger.error(f"project/version failure for {test_file_name}: {error}")
+            self.file_failure(file_name1, file_name2)
             return
-        
+
         if self.load_log_test(test_file_name):
             self.file_success(file_name1, file_name2)
         else:
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
 
     def execute(self) -> None:
-        logger.info("validator")
         logger.info(f"fresh dir:{self.fresh_dir}")
 
         os.chdir(self.fresh_dir)
         targets = sorted(os.listdir("."))
         logger.info(f"{len(targets)} files noted")
-        if len(targets) < 2:
-            return
-
-        time_now = int(time.time())
-        threshold = 60 * 10 # 10 minutes
-
-        # mastodon files arrive in pairs: one .json and one .csv file sharing
-        # the same base name.  The files will not arrive at the same time, so 
-        # if one file is missing I need to wait for the late file to arrive.
-        # I iterate through sorted filenames to discover matching pairs.
-        # Files are given ten minutes to arrive.
 
         ndx1 = 0
         while ndx1 < len(targets)-1:
             # valid files will arrive in pairs
             target1 = targets[ndx1]
             target2 = targets[ndx1+1]
-            print(f"testing {target1} {target2}")
-
-            target1_mtime = os.path.getmtime(target1)
-            delta1 = time_now - target1_mtime
-
-            target2_mtime = os.path.getmtime(target2)
-            delta2 = time_now - target2_mtime
 
             temp = target1.split(".")
             if target2.startswith(temp[0]):
-                print("filenames match") 
-                if delta1 > threshold and delta2 > threshold:
-                    print("process ripe files")
-                    self.file_processor(target1, target2)
-                    ndx1 += 1
-                else:
-                    print(f"skip unripe file")
-                    ndx1 += 1  # skip both files of the unripe pair
+                self.file_processor(target1, target2)
+                ndx1 += 1
             else:
-                print(f"filenames do not match")
-                if delta1 > threshold:
-                    self.file_failure(target1)
+                logger.info(f"skipping fail name match {target1} {target2}")
 
             ndx1 += 1
 

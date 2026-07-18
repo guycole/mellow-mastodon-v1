@@ -14,14 +14,9 @@ logger = logging.getLogger("koala")
 
 class Koala:
 
-    def __init__(self):      
-        # path from inside docker container
-        self.koala_dir = "/mnt/wombat/mastodon/koala"
-        self.success_dir = "/mnt/wombat/mastodon/success/"
-
-        # path for local development
-        # self.koala_dir = "/var/wombat/mastodon/koala"
-        # self.success_dir = "/var/wombat/mastodon/success/"
+    def __init__(self):        
+        self.koala_dir = os.environ.get("FRESH_DIR", "/var/wombat/mastodon/koala")
+        self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/mastodon/success")
 
         # UID/GID are provided by container entrypoint; default keeps local behavior.
         self.wombat_uid = int(os.getenv("WOMBAT_UID", "1000"))
@@ -62,7 +57,7 @@ class Koala:
             "hostName": self.raw_buffer.get("equipment", {}).get("hostName", "unknown"),
             "project": self.raw_buffer.get("project", "unknown"),
             "version": self.raw_buffer.get("version", 0),
-            "wifi": self.raw_buffer.get("observations", []),
+            "peakers": self.raw_buffer.get("peakers", []),
         }
 
         return result
