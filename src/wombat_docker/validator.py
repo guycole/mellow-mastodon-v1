@@ -27,13 +27,17 @@ class Validator:
         self.failure = 0
         self.success = 0
 
-    def file_failure(self, file_name: str):
+    def file_failure1(self, file_name: str) -> None:
         logger.info(f"file failure:{file_name}")
 
         self.failure += 1
         os.rename(file_name, self.failure_dir + "/" + file_name)
 
-    def file_success(self, file_name1: str, file_name2: str):
+    def file_failure(self, file_name1: str, file_name2: str) -> None:
+        self.file_failure1(file_name1)
+        self.file_failure1(file_name2)
+
+    def file_success(self, file_name1: str, file_name2: str) -> None:
         #logger.info(f"file success:{file_name1}, {file_name2}")
 
         self.success += 1
@@ -51,22 +55,52 @@ class Validator:
         return True
 
     def load_log_test(self, test_file_name: str) -> bool:
+        logger.info(f"load_log_test for file: {test_file_name}")
+
         try:
             candidate = self.postgres.load_log_select_by_file_name(test_file_name)
-            if candidate is not None:
-                logger.info(f"skippping already processed:{test_file_name}")
-                return False
-            else:
+            if candidate is None:
+                logger.info(f"processing new file:{test_file_name}")
+
+                geo_loc = self.postgres.geo_loc_select_by_site(self.raw_buffer["geoLoc"]["siteName"])
+                if len(geo_loc) == 0:
+                    print("must insert geo_loc for site:", self.raw_buffer["geoLoc"]["siteName"])
+                    return False
+                
                 load_log = {
+                    "crate_name": self.raw_buffer["crateName"],
+                    "epoch_seconds": self.raw_buffer["timeStamp"]["epochSeconds"],
                     "file_name": test_file_name,
+                    "geo_loc_id": geo_loc[0].id,
                     "host_name": self.raw_buffer["equipment"]["hostName"],
+                    "load_time": datetime.datetime.now(),
+                    "mode": self.raw_buffer["job"]["mode"],
                     "obs_time": self.raw_buffer["timeStamp"]["iso8601"],
-                    "project": self.raw_buffer["project"],
+                    "peaker_quantity": len(self.raw_buffer["peakers"]),
+                    "site_name": self.raw_buffer["geoLoc"]["siteName"],
+                    "task": self.raw_buffer["job"]["task"],
                 }
 
                 self.postgres.load_log_insert(load_log)
 
+                daily_score = {
+                    "crate_name": self.raw_buffer["crateName"],
+                    "file_quantity": 1,
+                    "host_name": self.raw_buffer["equipment"]["hostName"],
+                    "peaker_quantity": len(self.raw_buffer["peakers"]),
+                    "score_date": datetime.date.fromisoformat(self.raw_buffer["timeStamp"]["iso8601"][:10]),
+                }
+
+                self.postgres.daily_score_insert_or_update(daily_score)
+
+                if len(self.raw_buffer["observations"]) < 1:
+                    logger.info("skipping file with no observations")
+                    return False
+
                 return True
+            else:
+                logger.info(f"skippping already processed:{test_file_name}")
+                return False               
         except Exception as error:
             logger.error(f"postgres insert failed for {test_file_name}: {error}")        
         
@@ -77,21 +111,23 @@ class Validator:
 
         if os.path.isfile(file_name1) is False:
             logger.warning(f"skipping non-file:{file_name1}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
 
         if os.path.isfile(file_name2) is False:
             logger.warning(f"skipping non-file:{file_name2}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
-        
+
+        if os.path.getsize(file_name1) < 1 or os.path.getsize(file_name2) < 1:
+            logger.warning(f"skipping empty file(s):{file_name1} {file_name2}")
+            self.file_failure(file_name1, file_name2)
+            return
+
         test_file_name = file_name1 if file_name1.endswith(".json") else file_name2
         if not self.file_reader(test_file_name):
             logger.warning(f"file read failed for {test_file_name}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
 
         try:
@@ -99,20 +135,17 @@ class Validator:
                 pass
             else:
                 logger.warning(f"invalid version or project for {test_file_name} {self.raw_buffer['project']}")
-                self.file_failure(file_name1)
-                self.file_failure(file_name2)
+                self.file_failure(file_name1, file_name2)
                 return        
         except Exception as error:
             logger.error(f"project/version failure for {test_file_name}: {error}")
-            self.file_failure(file_name1)
-            self.file_failure(file_name2)
+            self.file_failure(file_name1, file_name2)
             return
 
-#        if self.load_log_test(test_file_name):
-#            self.file_success(file_name1, file_name2)
-#        else:
-#            self.file_failure(file_name1)
-#            self.file_failure(file_name2)
+        if self.load_log_test(test_file_name):
+            self.file_success(file_name1, file_name2)
+        else:
+            self.file_failure(file_name1, file_name2)
 
     def execute(self) -> None:
         logger.info(f"fresh dir:{self.fresh_dir}")
