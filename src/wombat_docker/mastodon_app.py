@@ -31,9 +31,8 @@ class MastodonApp:
         logger.info(f"mastodon execute:{self.stunt_box}")
 
         if self.stunt_box == "koala":
-            pass
-#            koala = Koala()
-#            koala.execute()
+            koala = Koala()
+            koala.execute()
         elif self.stunt_box == "validator":
             validator = Validator(self.postgres)
             validator.execute()
