@@ -85,11 +85,11 @@ class Koala:
         if winner is None:
             logger.info("no winner selected")
         else:
-            file_name = f"{self.koala_dir}/{winner['epochSeconds']}.{winner['hostName']}"
-            out_file_name = f"{self.koala_dir}/{file_name}"
-            logger.info(f"winner selected: {out_file_name}")
-            self.file_writer(out_file_name, winner)
-            os.chown(out_file_name, self.wombat_uid, self.wombat_gid)
+            file_name = f"{winner['epochSeconds']}.{winner['hostName']}"
+            full_file_name = f"{self.koala_dir}/{file_name}"
+            logger.info(f"winner selected: {full_file_name}")
+            self.file_writer(full_file_name, winner)
+            os.chown(full_file_name, self.wombat_uid, self.wombat_gid)
 
 if __name__ == "__main__":
     koala = Koala()
