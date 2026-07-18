@@ -85,8 +85,9 @@ class Koala:
         if winner is None:
             logger.info("no winner selected")
         else:
-            logger.info(f"winner selected: {winner['epochSeconds']}.{winner['hostName']}")
-            out_file_name = f"{self.koala_dir}/{winner['epochSeconds']}.{winner['hostName']}"
+            file_name = f"{self.koala_dir}/{winner['epochSeconds']}.{winner['hostName']}"
+            out_file_name = f"{self.koala_dir}/{file_name}"
+            logger.info(f"winner selected: {out_file_name}")
             self.file_writer(out_file_name, winner)
             os.chown(out_file_name, self.wombat_uid, self.wombat_gid)
 
