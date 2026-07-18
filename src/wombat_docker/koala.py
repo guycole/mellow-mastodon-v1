@@ -63,7 +63,6 @@ class Koala:
         return result
 
     def execute(self) -> None:
-        logger.info("koala execute")
         logger.info(f"success dir:{self.success_dir}")
 
         os.chdir(self.success_dir)
@@ -83,9 +82,13 @@ class Koala:
         for key in sorted(candidates):
             winner = candidates[key]
 
-        out_file_name = f"{self.koala_dir}/{winner['epochSeconds']}.{winner['hostName']}"
-        self.file_writer(out_file_name, winner)
-        os.chown(out_file_name, self.wombat_uid, self.wombat_gid)
+        if winner is None:
+            logger.info("no winner selected")
+        else:
+            logger.info(f"winner selected: {winner['epochSeconds']}.{winner['hostName']}")
+            out_file_name = f"{self.koala_dir}/{winner['epochSeconds']}.{winner['hostName']}"
+            self.file_writer(out_file_name, winner)
+            os.chown(out_file_name, self.wombat_uid, self.wombat_gid)
 
 if __name__ == "__main__":
     koala = Koala()
