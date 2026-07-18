@@ -12,11 +12,11 @@ from power_file_row import PowerFileRow
 
 
 class PowerFile:
-    def __init__(self, pf_args: dict[str, any]):
-        self.pf_meta_map = pf_args
+    def __init__(self, file_name: str):
+        self.file_name = file_name
 
-    def __str__(self):
-        return f"PowerFile: {self.pf_meta_map['source_file']}"
+#    def __str__(self):
+#        return f"PowerFile: {self.pf_meta_map['source_file']}"
 
     def json_writer(
         self,
@@ -52,7 +52,7 @@ class PowerFile:
 
         # read all rows of csv file
         helper = PowerFileHelper()
-        raw_buffer = helper.csv_file_reader(self.pf_meta_map["source_file"])
+        raw_buffer = helper.csv_file_reader(self.file_name)
 
         # convert each csv row into PowerFileRow object, store in power_epoch_map
         power_epoch_map = {}
@@ -64,7 +64,6 @@ class PowerFile:
                 continue
 
             pfr.convert_samples()
-            pfr.moving_window(self.pf_meta_map["half_window_size"])
 
             if pfr.validate_frequencies() is False:
                 raise Exception("frequency validation failed")
@@ -76,7 +75,6 @@ class PowerFile:
             power_epoch_map[epoch_key].add_sample(pfr)
 
         return power_epoch_map
-
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

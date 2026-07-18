@@ -31,17 +31,11 @@ class BootBoy:
             sys.exit(1)
 
         # Compose new config dict for YAML output
-        receiver = config_data.get("receiver", {})
-        task = receiver.get("task", "xxx")
-        geo_loc = config_data.get("geoLoc", {})
         crate_name = config_data.get("crateName", "xxx")
+        geo_loc = config_data.get("geoLoc", {})
         host_name = config_data.get("hostName", target)
         host_type = config_data.get("type", "xxx")
-
-        if task == "mastodon-v1-bs1":
-            mode = "big-search01"
-        else:
-            mode = "default"
+        receiver = config_data.get("receiver", {})
 
         yaml_config = {
             "crateName": crate_name,
@@ -51,7 +45,6 @@ class BootBoy:
             },
             "receiver": {
                 "antenna": receiver.get("antenna", "xxx"),
-                "mode": mode,
                 "receiverId": receiver.get("id", "xxx"),
                 "task": receiver.get("task", "xxx"),
                 "type": receiver.get("type", "xxx"),
@@ -97,7 +90,6 @@ class BootBoy:
     def execute(self, target: str) -> None:
         config = self.configuration(target)
         self.crontab()
-
 
 #
 #
