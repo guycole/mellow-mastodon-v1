@@ -43,11 +43,18 @@ class PowerFile:
             dbm_row = dbm_data[i]
             dbm_values = dbm_row[~np.isnan(dbm_row)]
             n = len(dbm_values)
+            if n == 0:
+                continue
 
             freqs = (freq_low + np.arange(n) * freq_step).astype(np.int64)
 
             if int(freqs[-1]) != int(freq_highs[i]):
-                logger.warning(f"frequency mismatch at row {i}: {freqs[-1]} != {freq_highs[i]}")
+                logger.warning(
+                    "frequency mismatch at row %s: %s != %s",
+                    i,
+                    freqs[-1],
+                    freq_highs[i],
+                )
 
             samples = list(zip(freqs.tolist(), dbm_values.tolist()))
 
@@ -56,6 +63,7 @@ class PowerFile:
             power_epoch_map[epoch_key][freq_low] = samples
 
         return power_epoch_map
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

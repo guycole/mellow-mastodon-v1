@@ -4,9 +4,10 @@
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
-
 import numpy as np
 from typing import Any
+
+Peaker = list[float]
 
 
 class PowerPeaker:
@@ -19,7 +20,7 @@ class PowerPeaker:
     def __init__(self, power_epoch_map: dict[int, Any]):
         self.power_epoch_map = power_epoch_map
 
-    def _bin_peakers(self, samples_list: list[tuple[int, float]]) -> list[tuple[int, float, float]]:
+    def _bin_peakers(self, samples_list: list[tuple[int, float]]) -> list[Peaker]:
         if not samples_list:
             return []
 
@@ -27,7 +28,7 @@ class PowerPeaker:
         values = np.array([s[1] for s in samples_list])
         n = len(values)
         row_baseline = np.median(values)
-        result = []
+        result: list[Peaker] = []
 
         half = self.HALF_WINDOW_SIZE
         guard = self.GUARD_WINDOW_SIZE
@@ -42,19 +43,23 @@ class PowerPeaker:
                 training = np.delete(values, ndx)
 
             local_baseline = np.median(training) if len(training) else row_baseline
-            local_mad = np.median(np.abs(training - local_baseline)) if len(training) else 0.0
+            local_mad = (
+                np.median(np.abs(training - local_baseline)) if len(training) else 0.0
+            )
             local_sigma = max(1.4826 * local_mad, self.MINIMUM_SIGMA_DB)
             detection_threshold = local_baseline + max(
                 self.MINIMUM_DELTA_DB, self.SIGMA_MULTIPLIER * local_sigma
             )
 
             if values[ndx] > detection_threshold:
-                result.append([int(freqs[ndx]), float(values[ndx]), float(local_baseline)])
+                result.append(
+                    [int(freqs[ndx]), float(values[ndx]), float(local_baseline)]
+                )
 
         return result
 
-    def discover_peakers(self) -> list[tuple[int, float, float]]:
-        discovered_map = {}
+    def discover_peakers(self) -> list[Peaker]:
+        discovered_map: dict[int, Peaker] = {}
 
         for epoch_key in sorted(self.power_epoch_map.keys()):
             epoch_data = self.power_epoch_map[epoch_key]
@@ -67,6 +72,7 @@ class PowerPeaker:
                         discovered_map[sample_frequency] = peaker
 
         return [discovered_map[key] for key in sorted(discovered_map.keys())]
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

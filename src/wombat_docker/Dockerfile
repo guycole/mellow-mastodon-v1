@@ -3,8 +3,7 @@
 # docker build -f wombat_docker/Dockerfile -t wombat:latest .
 # docker run -v /var/wombat:/mnt/wombat --name wombat wombat:latest
 # docker run -e stuntbox=validator -v /var/wombat:/mnt/wombat --name wombat wombat:latest
-# docker run -e stuntbox=scorer -e limit=5 --name wombat wombat:latest
-# docker run -e stuntbox=scorer --name wombat wombat:latest
+# docker run -e stuntbox=koala -v /var/wombat:/mnt/wombat --name wombat wombat:latest
 #
 FROM python:3.11-slim
 

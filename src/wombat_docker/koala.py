@@ -5,18 +5,19 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import logging
-import datetime
 import json
 import os
+from typing import Any
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("koala")
 
-class Koala:
 
-    def __init__(self):        
+class Koala:
+    def __init__(self):
         self.koala_dir = os.environ.get("KOALA_DIR", "/var/wombat/mastodon/koala")
         self.success_dir = os.environ.get("SUCCESS_DIR", "/var/wombat/mastodon/success")
+        self.raw_buffer: dict[str, Any] = {}
 
     def file_reader(self, file_name: str) -> bool:
         try:
@@ -27,8 +28,8 @@ class Koala:
             return False
 
         return True
-    
-    def file_writer(self, file_name: str, content: dict) -> bool:
+
+    def file_writer(self, file_name: str, content: dict[str, Any]) -> bool:
         try:
             with open(file_name, "w", encoding="utf-8") as out_file:
                 json.dump(content, out_file)
@@ -38,20 +39,20 @@ class Koala:
 
         return True
 
-    def file_processor(self, file_name: str) -> dict[str, any]:
+    def file_processor(self, file_name: str) -> dict[str, Any]:
         if not self.file_reader(file_name):
             logger.warning(f"file read failed for {file_name}")
             return {}
-        
-        epochSeconds = self.raw_buffer.get("timeStamp", {}).get("epochSeconds", 0)
-        
+
+        epoch_seconds = self.raw_buffer.get("timeStamp", {}).get("epochSeconds", 0)
+
         result = {
-            "epochSeconds": epochSeconds,
+            "epochSeconds": epoch_seconds,
             "geoLoc": {
                 "site": self.raw_buffer.get("geoLoc", {}).get("siteName", "unknown")
             },
             "hostName": self.raw_buffer.get("equipment", {}).get("hostName", "unknown"),
-            "project": self.raw_buffer.get("project", "unknown"),
+            "project": self.raw_buffer.get("job", {}).get("project", "unknown"),
             "version": self.raw_buffer.get("version", 0),
             "peakers": self.raw_buffer.get("peakers", []),
         }
@@ -63,11 +64,10 @@ class Koala:
 
         os.chdir(self.success_dir)
         targets = [ff for ff in os.listdir(".") if ff.endswith(".json")]
-        logger.info(f"{len(targets)} files noted")
+        logger.info("%s files noted", len(targets))
 
-        # only process the most recent 
+        # only process the most recent
         candidates = {}
-        max_list_size = 5
         for target in targets:
             candidate = self.file_processor(target)
             if len(candidate) > 0:
@@ -89,7 +89,7 @@ class Koala:
 if __name__ == "__main__":
     koala = Koala()
     koala.execute()
-    
+
 # ;;; Local Variables: ***
 # ;;; mode:python ***
 # ;;; End: ***

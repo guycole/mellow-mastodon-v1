@@ -7,6 +7,7 @@
 
 import json
 import logging
+import os
 
 from jsonschema import validate
 
@@ -113,6 +114,38 @@ class JsonHelper:
                 json.dump(json_data, out_file, indent=4)
         except Exception as error:
             logger.error(f"file write failure for {file_name}: {error}")
+            return False
+
+        return True
+
+    def json_file_tester(self, file_name) -> bool:
+        if os.path.isfile(file_name) is False:
+            logger.warning(f"skipping non-file:{file_name}")
+            return False
+
+        if os.path.getsize(file_name) < 1:
+            logger.warning(f"skipping empty file:{file_name}")
+            return False
+
+        if not file_name.endswith(".json"):
+            logger.warning(f"skipping non-json:{file_name}")
+            return False
+
+        if not self.json_file_reader(file_name, True):
+            logger.warning(f"json file read/verify failure for {file_name}")
+            return False
+
+        if self.raw_json["fileName"] != file_name:
+            logger.warning(f"mismatched file name: {self.raw_json['fileName']} vs {file_name}")
+            return False
+
+        if (
+            self.raw_json["version"] == 1
+            and self.raw_json["job"]["project"] == "mastodon-v1"
+        ):
+            pass
+        else:
+            logger.warning(f"invalid version or project for {file_name}")
             return False
 
         return True

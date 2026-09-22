@@ -6,13 +6,14 @@
 #
 import json
 import socket
+import subprocess
 import sys
 
 import yaml
 from yaml.loader import SafeLoader
 
-class BootBoy:
 
+class BootBoy:
     def configuration(self, target: str) -> str:
         print(f"BootBoy: configuring {target}")
 
@@ -20,7 +21,7 @@ class BootBoy:
         admin_json_path = f"/var/wombat/admin/{target}.json"
 
         try:
-            with open(admin_json_path, "r") as f:
+            with open(admin_json_path, "r", encoding="utf-8") as f:
                 config_data = json.load(f)
         except Exception as e:
             print(f"Error reading {admin_json_path}: {e}")
@@ -51,8 +52,8 @@ class BootBoy:
 
         # Write to config.yaml in the current directory
         try:
-            with open("config.yaml", "w") as f:
-                yaml.dump(yaml_config, f, default_flow_style=False)
+            with open("config.yaml", "w", encoding="utf-8") as f:
+                yaml.dump(yaml_config, f, default_flow_style=False, sort_keys=False)
 
             print("config.yaml generated successfully.")
         except Exception as e:
@@ -61,13 +62,17 @@ class BootBoy:
 
         return receiver.get("task", "xxx")
 
-    def crontab(self, task:str) -> None:
-        import subprocess
-
+    def crontab(self, task: str) -> None:
         if task.endswith("bs1-pk1"):
-            crontab_entry = ("*/6 * * * * $HOME/github/mellow-mastodon-v1/bin/big-search01.sh > /dev/null 2>&1")
+            crontab_entry = (
+                "*/6 * * * * $HOME/github/mellow-mastodon-v1/bin/big-search01.sh "
+                "> /dev/null 2>&1"
+            )
         elif task.endswith("wx1-pk1"):
-            crontab_entry = ("*/2 * * * * $HOME/github/mellow-mastodon-v1/bin/noaa-wx01.sh > /dev/null 2>&1")
+            crontab_entry = (
+                "*/2 * * * * $HOME/github/mellow-mastodon-v1/bin/noaa-wx01.sh "
+                "> /dev/null 2>&1"
+            )
         else:
             print(f"Unknown task: {task}. No crontab entry will be created.")
             return
@@ -89,6 +94,7 @@ class BootBoy:
     def execute(self, target: str) -> None:
         task = self.configuration(target)
         self.crontab(task)
+
 
 #
 #
