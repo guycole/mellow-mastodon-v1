@@ -4,8 +4,9 @@
 # Development Environment: Ubuntu 22.04.5 LTS/python 3.10.12
 # Author: G.S. Cole (guycole at gmail dot com)
 #
-import numpy as np
 from typing import Any
+
+import numpy as np
 
 Peaker = list[float]
 

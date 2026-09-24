@@ -10,7 +10,6 @@ import subprocess
 import sys
 
 import yaml
-from yaml.loader import SafeLoader
 
 
 class BootBoy:
@@ -21,10 +20,10 @@ class BootBoy:
         admin_json_path = f"/var/wombat/admin/{target}.json"
 
         try:
-            with open(admin_json_path, "r", encoding="utf-8") as f:
-                config_data = json.load(f)
-        except Exception as e:
-            print(f"Error reading {admin_json_path}: {e}")
+            with open(admin_json_path, "r", encoding="utf-8") as in_file:
+                config_data = json.load(in_file)
+        except Exception as error:
+            print(f"Error reading {admin_json_path}: {error}")
             sys.exit(1)
 
         # Compose new config dict for YAML output
@@ -52,12 +51,17 @@ class BootBoy:
 
         # Write to config.yaml in the current directory
         try:
-            with open("config.yaml", "w", encoding="utf-8") as f:
-                yaml.dump(yaml_config, f, default_flow_style=False, sort_keys=False)
+            with open("config.yaml", "w", encoding="utf-8") as out_file:
+                yaml.dump(
+                    yaml_config,
+                    out_file,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
 
             print("config.yaml generated successfully.")
-        except Exception as e:
-            print(f"Error writing config.yaml: {e}")
+        except Exception as error:
+            print(f"Error writing config.yaml: {error}")
             sys.exit(1)
 
         return receiver.get("task", "xxx")
@@ -88,8 +92,8 @@ class BootBoy:
                 print("Crontab updated for wombat.")
             else:
                 print("Failed to update wombat's crontab.")
-        except Exception as e:
-            print(f"Error updating wombat's crontab: {e}")
+        except Exception as error:
+            print(f"Error updating wombat's crontab: {error}")
 
     def execute(self, target: str) -> None:
         task = self.configuration(target)

@@ -12,12 +12,14 @@ import pandas as pd
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("power_file")
 
+PowerSamples = dict[int, dict[int, list[tuple[int, float]]]]
+
 
 class PowerFile:
     def __init__(self, file_name: str):
         self.file_name = file_name
 
-    def parser(self) -> dict[int, dict[int, list[tuple[int, float]]]]:
+    def parser(self) -> PowerSamples:
         """Read rtl_power CSV and return {epoch: {freq_low_hz: [(freq_hz, dbm), ...]}}"""
 
         df = pd.read_csv(self.file_name, header=None)
@@ -33,7 +35,7 @@ class PowerFile:
         freq_steps = df[4].values.astype(float)
         dbm_data = df.iloc[:, 6:].values.astype(float)
 
-        power_epoch_map: dict[int, dict[int, list[tuple[int, float]]]] = {}
+        power_epoch_map: PowerSamples = {}
 
         for i in range(len(epochs)):
             epoch_key = int(epochs[i])

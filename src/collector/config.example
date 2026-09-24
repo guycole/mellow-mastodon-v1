@@ -1,0 +1,15 @@
+crateName: wombat00
+equipment:
+  hostName: localhost
+  hostType: development
+freshDir: /var/wombat/fresh/mastodon
+geoLoc:
+  altitude: 0
+  latitude: 0.0
+  longitude: 0.0
+  siteName: development
+receiver:
+  antenna: test-antenna
+  receiverId: 1
+  task: anderson-bs1-pk1
+  type: rtl-sdr-v4

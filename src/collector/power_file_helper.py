@@ -5,6 +5,10 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import csv
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("power_file_helper")
 
 
 class PowerFileHelper:
@@ -19,7 +23,7 @@ class PowerFileHelper:
                 for row in csv_file:
                     result.append(row)
         except Exception as error:
-            print(error)
+            logger.error("csv read failed for %s: %s", file_name, error)
 
         return result
 
