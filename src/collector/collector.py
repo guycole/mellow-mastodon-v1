@@ -30,9 +30,6 @@ logger = logging.getLogger("mastodon")
 class Equipment(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(populate_by_name=True)
 
-    antenna: str
-    receiver_id: int = pydantic.Field(alias="receiverId")
-    receiver_type: str = pydantic.Field(alias="receiverType")
     host_name: str = pydantic.Field(alias="hostName")
     host_type: str = pydantic.Field(alias="hostType")
 
@@ -52,6 +49,12 @@ class Job(pydantic.BaseModel):
     task: str
 
 
+class Peaker(pydantic.BaseModel):
+    frequency_hz: int
+    measured_dbm: float
+    background_dbm: float
+
+
 class Receiver(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(populate_by_name=True)
 
@@ -67,6 +70,7 @@ class TimeStamp(pydantic.BaseModel):
     epoch_seconds: int = pydantic.Field(
         default_factory=lambda: int(time.time()), alias="epochSeconds"
     )
+
     iso8601: str = ""
 
     @pydantic.model_validator(mode="after")
@@ -87,7 +91,8 @@ class MastodonModel(pydantic.BaseModel):
     geo_loc: GeoLoc = pydantic.Field(alias="geoLoc")
     job: Job
     time_stamp: TimeStamp = pydantic.Field(alias="timeStamp")
-    peakers: list[list[float]]
+    peakers: list[Peaker]
+
 
 class Collector(ABC):
     def __init__(self, args: dict[str, Any]):
@@ -110,7 +115,7 @@ class Collector(ABC):
         project = task
         self.job = Job(mode=mode, project=project, task=task)
 
-    def get_peakers(self, base_file_name: str) -> list[list[float]]:
+    def get_peakers(self, base_file_name: str) -> list[Peaker]:
         csv_file_name = f"/tmp/{base_file_name}.csv"
         if not os.path.exists(csv_file_name):
             logger.error("CSV file does not exist: %s", csv_file_name)
@@ -119,15 +124,22 @@ class Collector(ABC):
         power_file = PowerFile(csv_file_name)
         power_epoch_map = power_file.parser()
         power_peaker = PowerPeaker(power_epoch_map)
-        return power_peaker.discover_peakers()
+        raw_peakers = power_peaker.discover_peakers()
+
+        return [
+            Peaker(
+                frequency_hz=int(peaker[0]),
+                measured_dbm=float(peaker[1]),
+                background_dbm=float(peaker[2]),
+            )
+            for peaker in raw_peakers
+        ]
 
     def execute(self, base_file_name: str, start_time: int) -> int:
         logger.info("collector execute: %s %s", base_file_name, start_time)
 
         peakers_list = self.get_peakers(base_file_name)
-        if not peakers_list:
-            return []
-
+ 
         mastodon_model = MastodonModel(
             crateName=self.crate_name,
             fileName=f"{base_file_name}.json",
@@ -143,6 +155,7 @@ class Collector(ABC):
             out_file.write(mastodon_model.model_dump_json(indent=4, by_alias=True))
 
         return 0
+
 
 #
 # argv[1] = base filename

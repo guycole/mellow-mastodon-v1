@@ -20,13 +20,10 @@ schema = {
         "equipment": {
             "type": "object",
             "properties": {
-                "antenna":      {"type": "string"},
-                "receiverId":   {"type": "number"},
-                "receiverType": {"type": "string"},
                 "hostName":     {"type": "string"},
                 "hostType":     {"type": "string"},
             },
-            "required": ["antenna", "receiverId", "receiverType", "hostName", "hostType"],
+            "required": ["hostName", "hostType"],
             "additionalProperties": False
         },
         "geoLoc": {
@@ -69,10 +66,14 @@ schema = {
         "peakers": {
             "type": "array",
             "items": {
-                "type": "array",
-                "items": {"type": "number"},
-                "minItems": 3,
-                "maxItems": 3
+                "type": "object",
+                "properties": {
+                    "frequency_hz": {"type": "number"},
+                    "measured_dbm": {"type": "number"},
+                    "background_dbm": {"type": "number"},
+                },
+                "required": ["frequency_hz", "measured_dbm", "background_dbm"],
+                "additionalProperties": False
             }
         },
     },
