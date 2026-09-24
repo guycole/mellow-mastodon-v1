@@ -86,15 +86,23 @@ class MastodonModel(pydantic.BaseModel):
 
     crate_name: str = pydantic.Field(alias="crateName")
     file_name: str = pydantic.Field(alias="fileName")
-    version: int = 1
+    version: int = 2
     equipment: Equipment
     geo_loc: GeoLoc = pydantic.Field(alias="geoLoc")
     job: Job
     time_stamp: TimeStamp = pydantic.Field(alias="timeStamp")
     peakers: list[Peaker]
 
-
 class Collector(ABC):
+    @abstractmethod
+    def get_peakers(self, base_file_name: str) -> list[Peaker]:
+        pass
+
+    @abstractmethod
+    def execute(self, base_file_name: str, start_time: int) -> int:
+        pass
+  
+class MastodonCollector(Collector):
     def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crateName"]
         self.fresh_dir = args["freshDir"]
@@ -155,7 +163,6 @@ class Collector(ABC):
             out_file.write(mastodon_model.model_dump_json(indent=4, by_alias=True))
 
         return 0
-
 
 #
 # argv[1] = base filename
