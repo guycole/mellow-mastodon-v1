@@ -1,16 +1,17 @@
-name: Publish Docker Images
+name: Publish Docker Image
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   REGISTRY: ghcr.io
 
 jobs:
   build-peccary:
-    name: Build and push peccary
+    name: Build and push mellow-mastodon peccary
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -57,7 +58,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-wombat:
-    name: Build and push wombat
+    name: Build and push mellow-mastodon wombat
     runs-on: ubuntu-latest
     permissions:
       contents: read
