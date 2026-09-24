@@ -113,6 +113,8 @@ class MastodonCollector(Collector):
         self.time_stamp = TimeStamp()
 
         task = args["receiver"]["task"]
+        tokens = task.split("-")
+        project = "-".join(tokens[:2])
 
         mode = "unknown"
         if task.endswith("bs1-pk1"):
@@ -120,7 +122,6 @@ class MastodonCollector(Collector):
         if task.endswith("wx1-pk1"):
             mode = "noaa-wx01"
 
-        project = task
         self.job = Job(mode=mode, project=project, task=task)
 
     def get_peakers(self, base_file_name: str) -> list[Peaker]:
