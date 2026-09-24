@@ -147,6 +147,8 @@ class MastodonCollector(Collector):
         logger.info("collector execute: %s %s", base_file_name, start_time)
 
         peakers_list = self.get_peakers(base_file_name)
+        if not peakers_list:
+            return 1
  
         mastodon_model = MastodonModel(
             crateName=self.crate_name,
@@ -163,6 +165,10 @@ class MastodonCollector(Collector):
             out_file.write(mastodon_model.model_dump_json(indent=4, by_alias=True))
 
         return 0
+
+
+# Backward-compatible import surface for existing callers/tests.
+Collector = MastodonCollector
 
 #
 # argv[1] = base filename
@@ -183,7 +189,7 @@ if __name__ == "__main__":
     try:
         with open(file_name, "r", encoding="utf-8") as in_file:
             configuration = yaml.load(in_file, Loader=SafeLoader)
-            collector = Collector(configuration)
+            collector = MastodonCollector(configuration)
             sys.exit(collector.execute(base_name, start_time))
     except FileNotFoundError:
         logger.error("configuration file not found: %s", file_name)
