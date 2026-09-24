@@ -5,18 +5,37 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import logging
-import datetime
 import os
+from collections import defaultdict
+from abc import ABC, abstractmethod
 
-from helper.json_helper import JsonHelper, schema
-
+from helper.json_helper import JsonHelper
 from helper.postgres import PostGres
+from helper.sql_helper import SqlHelper
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("validator")
 
-class Validator:
 
+class Validator(ABC):
+    @abstractmethod
+    def file_processor(self, csv_file_name: str, json_file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    def execute(self) -> int:
+        pass
+
+    @abstractmethod
+    def file_failure(self, file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    def file_success(self, file_name: str) -> None:
+        pass
+
+
+class MastodonValidator(Validator):
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
@@ -28,152 +47,100 @@ class Validator:
         self.success = 0
 
         self.jh = JsonHelper()
+        self.sql_helper = SqlHelper(self.postgres, self.jh, logger)
 
-    def file_failure1(self, file_name: str) -> None:
-        logger.info(f"file failure:{file_name}")
-
-        self.failure += 1
-        os.rename(file_name, self.failure_dir + "/" + file_name)
-
-    def file_failure2(self, file_name1: str, file_name2: str) -> None:
-        self.file_failure1(file_name1)
-        self.file_failure1(file_name2)
-
-    def file_success2(self, file_name1: str, file_name2: str) -> None:
-        #logger.info(f"file success:{file_name1}, {file_name2}")
-
-        self.success += 1
-        os.rename(file_name1, self.success_dir + "/" + file_name1)
-        os.rename(file_name2, self.success_dir + "/" + file_name2)
-
-    def _job_task(self) -> str:
-        task = self.jh.raw_json.get("job", {}).get("task")
-        if isinstance(task, str):
-            task = task.strip()
-
-        if task:
-            return task
-
-        raise ValueError("job.task must be a non-empty string")
-
-    def load_log_test(self, test_file_name: str) -> bool:
-        logger.info(f"load_log_test for file: {test_file_name}")
+    def _move_file(self, file_name: str, target_dir: str) -> bool:
+        source = os.path.abspath(file_name)
+        target = os.path.join(target_dir, file_name)
 
         try:
-            candidate = self.postgres.load_log_select_by_file_name(test_file_name)
-            if candidate is None:
-                logger.info(f"processing new file:{test_file_name}")
-                task = self._job_task()
-
-                geo_loc = self.postgres.geo_loc_select_by_site(self.jh.raw_json["geoLoc"]["siteName"])
-                if len(geo_loc) == 0:
-                    print("must insert geo_loc for site:", self.jh.raw_json["geoLoc"]["siteName"])
-                    return False
-
-                load_log = {
-                    "crate_name": self.jh.raw_json["crateName"],
-                    "epoch_seconds": self.jh.raw_json["timeStamp"]["epochSeconds"],
-                    "file_name": test_file_name,
-                    "geo_loc_id": geo_loc[0].id,
-                    "host_name": self.jh.raw_json["equipment"]["hostName"],
-                    "load_time": datetime.datetime.now(),
-                    "mode": self.jh.raw_json["job"]["mode"],
-                    "obs_time": self.jh.raw_json["timeStamp"]["iso8601"],
-                    "peaker_quantity": len(self.jh.raw_json["peakers"]),
-                    "site_name": self.jh.raw_json["geoLoc"]["siteName"],
-                    "task": task,
-                }
-
-                self.postgres.load_log_insert(load_log)
-
-                daily_score = {
-                    "crate_name": self.jh.raw_json["crateName"],
-                    "file_quantity": 1,
-                    "host_name": self.jh.raw_json["equipment"]["hostName"],
-                    "peaker_quantity": len(self.jh.raw_json["peakers"]),
-                    "score_date": datetime.date.fromisoformat(self.jh.raw_json["timeStamp"]["iso8601"][:10]),
-                    "task": task,
-                }
-
-                self.postgres.daily_score_insert_or_update(daily_score)
-
-                if len(self.jh.raw_json["peakers"]) < 1:
-                    logger.info("skipping file with no peakers")
-                    return False
-
-                return True
-            else:
-                logger.info(f"skippping already processed:{test_file_name}")
-                return False               
+            os.rename(source, target)
         except Exception as error:
-            logger.error(f"postgres insert failed for {test_file_name}: {error}")        
-        
-        return False
+            logger.error("file move failure for %s -> %s: %s", source, target, error)
+            return False
 
-    def file_processor(self, file_name1: str, file_name2: str) -> None:
-        logger.info(f"processing files: {file_name1} {file_name2}")
+        return True
 
-        if os.path.isfile(file_name1) is False:
-            logger.warning(f"skipping non-file:{file_name1}")
-            self.file_failure2(file_name1, file_name2)
+    def file_failure(self, file_name: str) -> None:
+        logger.info("file failure:%s", file_name)
+
+        self.failure += 1
+        self._move_file(file_name, self.failure_dir)
+
+    def file_success(self, file_name: str) -> None:
+        logger.info("file success:%s", file_name)
+
+        self.success += 1
+        self._move_file(file_name, self.success_dir)
+
+    def file_failure_pair(self, file_name1: str, file_name2: str) -> None:
+        self.file_failure(file_name1)
+        self.file_failure(file_name2)
+
+    def file_success_pair(self, file_name1: str, file_name2: str) -> None:
+        self.file_success(file_name1)
+        self.file_success(file_name2)
+
+    @staticmethod
+    def _paired_targets(targets: list[str]) -> tuple[list[tuple[str, str]], list[str]]:
+        grouped: dict[str, set[str]] = defaultdict(set)
+        for target in targets:
+            base_name, extension = os.path.splitext(target)
+            if extension:
+                grouped[base_name].add(extension.lower())
+
+        pairs: list[tuple[str, str]] = []
+        unpaired: list[str] = []
+
+        for base_name in sorted(grouped.keys()):
+            expected = {".csv", ".json"}
+            if grouped[base_name] == expected:
+                pairs.append((f"{base_name}.csv", f"{base_name}.json"))
+            else:
+                for extension in sorted(grouped[base_name]):
+                    unpaired.append(f"{base_name}{extension}")
+
+        return pairs, unpaired
+
+    def file_processor(self, csv_file_name: str, json_file_name: str) -> None:
+        logger.info("processing files: %s %s", csv_file_name, json_file_name)
+
+        if not self.jh.json_file_tester(json_file_name):
+            logger.warning("file read failed for %s", json_file_name)
+            self.file_failure_pair(csv_file_name, json_file_name)
             return
 
-        if os.path.isfile(file_name2) is False:
-            logger.warning(f"skipping non-file:{file_name2}")
-            self.file_failure2(file_name1, file_name2)
+        load_log_id = self.sql_helper.load_log_test(json_file_name)
+        if load_log_id < 1:
+            self.file_failure_pair(csv_file_name, json_file_name)
             return
 
-        if os.path.getsize(file_name1) < 1 or os.path.getsize(file_name2) < 1:
-            logger.warning(f"skipping empty file(s):{file_name1} {file_name2}")
-            self.file_failure2(file_name1, file_name2)
+        if not self.sql_helper.load_obs(load_log_id):
+            self.file_failure_pair(csv_file_name, json_file_name)
             return
 
-        test_file_name = file_name1 if file_name1.endswith(".json") else file_name2
-        if not self.jh.json_file_reader(test_file_name, True):
-            logger.warning(f"file read failed for {test_file_name}")
-            self.file_failure2(file_name1, file_name2)
-            return
+        self.file_success_pair(csv_file_name, json_file_name)
 
-        if self.jh.raw_json["fileName"] != test_file_name:
-            logger.warning(f"mismatched file name: {self.jh.raw_json['fileName']} vs {test_file_name}")
-            self.file_failure2(file_name1, file_name2)
-            return
-
-        if self.jh.raw_json["version"] == 1 and self.jh.raw_json["job"]["project"].startswith("mastodon-v1"):
-            pass
-        else:
-            logger.warning(f"invalid version or project for {test_file_name} {self.jh.raw_json['job']['project']}")
-            self.file_failure2(file_name1, file_name2)
-            return
-
-        if self.load_log_test(test_file_name):
-            self.file_success2(file_name1, file_name2)
-        else:
-            self.file_failure2(file_name1, file_name2)
-
-    def execute(self) -> None:
-        logger.info(f"validator fresh dir:{self.fresh_dir}")
+    def execute(self) -> int:
+        logger.info("validator fresh dir:%s", self.fresh_dir)
 
         os.chdir(self.fresh_dir)
         targets = sorted(os.listdir("."))
-        logger.info(f"{len(targets)} files noted")
+        logger.info("%s files noted", len(targets))
 
-        ndx1 = 0
-        while ndx1 < len(targets)-1:
-            # valid files will arrive in pairs
-            target1 = targets[ndx1]
-            target2 = targets[ndx1+1]
+        pairs, unpaired = self._paired_targets(targets)
+        for target in unpaired:
+            logger.info("unpaired target noted: %s", target)
+            self.file_failure(target)
 
-            temp = target1.split(".")
-            if target2.startswith(temp[0]):
-                self.file_processor(target1, target2)
-                ndx1 += 1
-            else:
-                logger.info(f"skipping fail name match {target1} {target2}")
+        for csv_file_name, json_file_name in pairs:
+            self.file_processor(csv_file_name, json_file_name)
 
-            ndx1 += 1
+        logger.info("validator success:%s failure:%s", self.success, self.failure)
+        return 0
 
-        logger.info(f"validator success:{self.success} failure:{self.failure}")
+# Keep import compatibility for existing tests/callers.
+Validator = MastodonValidator
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

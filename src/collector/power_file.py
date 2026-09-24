@@ -12,12 +12,14 @@ import pandas as pd
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("power_file")
 
+PowerSamples = dict[int, dict[int, list[tuple[int, float]]]]
+
 
 class PowerFile:
     def __init__(self, file_name: str):
         self.file_name = file_name
 
-    def parser(self) -> dict[int, dict[int, list[tuple[int, float]]]]:
+    def parser(self) -> PowerSamples:
         """Read rtl_power CSV and return {epoch: {freq_low_hz: [(freq_hz, dbm), ...]}}"""
 
         df = pd.read_csv(self.file_name, header=None)
@@ -33,7 +35,7 @@ class PowerFile:
         freq_steps = df[4].values.astype(float)
         dbm_data = df.iloc[:, 6:].values.astype(float)
 
-        power_epoch_map: dict[int, dict[int, list[tuple[int, float]]]] = {}
+        power_epoch_map: PowerSamples = {}
 
         for i in range(len(epochs)):
             epoch_key = int(epochs[i])
@@ -43,11 +45,18 @@ class PowerFile:
             dbm_row = dbm_data[i]
             dbm_values = dbm_row[~np.isnan(dbm_row)]
             n = len(dbm_values)
+            if n == 0:
+                continue
 
             freqs = (freq_low + np.arange(n) * freq_step).astype(np.int64)
 
             if int(freqs[-1]) != int(freq_highs[i]):
-                logger.warning(f"frequency mismatch at row {i}: {freqs[-1]} != {freq_highs[i]}")
+                logger.warning(
+                    "frequency mismatch at row %s: %s != %s",
+                    i,
+                    freqs[-1],
+                    freq_highs[i],
+                )
 
             samples = list(zip(freqs.tolist(), dbm_values.tolist()))
 
@@ -56,6 +65,7 @@ class PowerFile:
             power_epoch_map[epoch_key][freq_low] = samples
 
         return power_epoch_map
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

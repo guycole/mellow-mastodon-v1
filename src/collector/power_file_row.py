@@ -5,8 +5,11 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 import datetime
-import json
-import statistics
+import logging
+from typing import Any
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("power_file_row")
 
 
 class PowerFileRow:
@@ -15,12 +18,12 @@ class PowerFileRow:
         # "\tdate, time, Hz low, Hz high, Hz step, samples, dbm, dbm, ...
 
         if len(raw_row) < 6:
-            raise Exception("bad row len")
+            raise ValueError("bad row len")
 
         self.raw_row = raw_row
-        self.samples_list = []
-        self.spectrum_list = []
-        self.statistics_map = {}
+        self.samples_list: list[tuple[int, float]] = []
+        self.spectrum_list: list[Any] = []
+        self.statistics_map: dict[str, Any] = {}
 
         row_date = raw_row[0].split("-")
         yy = int(row_date[0])
@@ -44,17 +47,17 @@ class PowerFileRow:
             "time_stamp_iso8601": dt.isoformat(),
         }
 
-    def __str__(self):
-        return f"{self.pfr_meta_map['time_stamp_epoch']} {self.pfr_meta_map['freq_low_hz']} {self.pfr_meta_map['freq_high_hz']} {self.pfr_meta_map['freq_step_hz']}"
+    def __str__(self) -> str:
+        return (
+            f"{self.pfr_meta_map['time_stamp_epoch']} "
+            f"{self.pfr_meta_map['freq_low_hz']} "
+            f"{self.pfr_meta_map['freq_high_hz']} "
+            f"{self.pfr_meta_map['freq_step_hz']}"
+        )
 
-    def convert_samples(self):
+    def convert_samples(self) -> None:
         # convert from string to float
         # produces self.samples_list = [(dbm, frequency), ...]
-
-        avg_sample = 0
-        min_sample = 0
-        max_sample = -100
-        total_samples = 0
 
         current_frequency = self.pfr_meta_map["freq_low_hz"]
         step_frequency = self.pfr_meta_map["freq_step_hz"]
@@ -63,7 +66,6 @@ class PowerFileRow:
             current_value = float(self.raw_row[ndx])
             self.samples_list.append((int(current_frequency), current_value))
             current_frequency += step_frequency
-
 
     def validate_frequencies(self) -> bool:
         """ensure the promised frequency range matches calculated range"""
@@ -75,12 +77,18 @@ class PowerFileRow:
         predicted_high = self.pfr_meta_map["freq_high_hz"]
 
         if actual_low != predicted_low or actual_high != predicted_high:
-            print(f"actual low: {actual_low} predicted low: {predicted_low}")
-            print(f"actual high: {actual_high} predicted high: {predicted_high}")
+            logger.warning(
+                "actual low: %s predicted low: %s", actual_low, predicted_low
+            )
+            logger.warning(
+                "actual high: %s predicted high: %s",
+                actual_high,
+                predicted_high,
+            )
             return False
-        else:
-            # print("passed")
-            return True
+
+        return True
+
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***

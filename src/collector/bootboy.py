@@ -6,13 +6,13 @@
 #
 import json
 import socket
+import subprocess
 import sys
 
 import yaml
-from yaml.loader import SafeLoader
+
 
 class BootBoy:
-
     def configuration(self, target: str) -> str:
         print(f"BootBoy: configuring {target}")
 
@@ -20,10 +20,10 @@ class BootBoy:
         admin_json_path = f"/var/wombat/admin/{target}.json"
 
         try:
-            with open(admin_json_path, "r") as f:
-                config_data = json.load(f)
-        except Exception as e:
-            print(f"Error reading {admin_json_path}: {e}")
+            with open(admin_json_path, "r", encoding="utf-8") as in_file:
+                config_data = json.load(in_file)
+        except Exception as error:
+            print(f"Error reading {admin_json_path}: {error}")
             sys.exit(1)
 
         # Compose new config dict for YAML output
@@ -51,23 +51,32 @@ class BootBoy:
 
         # Write to config.yaml in the current directory
         try:
-            with open("config.yaml", "w") as f:
-                yaml.dump(yaml_config, f, default_flow_style=False)
+            with open("config.yaml", "w", encoding="utf-8") as out_file:
+                yaml.dump(
+                    yaml_config,
+                    out_file,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
 
             print("config.yaml generated successfully.")
-        except Exception as e:
-            print(f"Error writing config.yaml: {e}")
+        except Exception as error:
+            print(f"Error writing config.yaml: {error}")
             sys.exit(1)
 
         return receiver.get("task", "xxx")
 
-    def crontab(self, task:str) -> None:
-        import subprocess
-
+    def crontab(self, task: str) -> None:
         if task.endswith("bs1-pk1"):
-            crontab_entry = ("*/6 * * * * $HOME/github/mellow-mastodon-v1/bin/big-search01.sh > /dev/null 2>&1")
+            crontab_entry = (
+                "*/6 * * * * $HOME/github/mellow-mastodon-v1/bin/big-search01.sh "
+                "> /dev/null 2>&1"
+            )
         elif task.endswith("wx1-pk1"):
-            crontab_entry = ("*/2 * * * * $HOME/github/mellow-mastodon-v1/bin/noaa-wx01.sh > /dev/null 2>&1")
+            crontab_entry = (
+                "*/2 * * * * $HOME/github/mellow-mastodon-v1/bin/noaa-wx01.sh "
+                "> /dev/null 2>&1"
+            )
         else:
             print(f"Unknown task: {task}. No crontab entry will be created.")
             return
@@ -83,12 +92,13 @@ class BootBoy:
                 print("Crontab updated for wombat.")
             else:
                 print("Failed to update wombat's crontab.")
-        except Exception as e:
-            print(f"Error updating wombat's crontab: {e}")
+        except Exception as error:
+            print(f"Error updating wombat's crontab: {error}")
 
     def execute(self, target: str) -> None:
         task = self.configuration(target)
         self.crontab(task)
+
 
 #
 #
