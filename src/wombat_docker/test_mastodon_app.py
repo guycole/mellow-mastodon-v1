@@ -6,10 +6,10 @@ def test_execute_runs_validator_mode(monkeypatch) -> None:
         def __init__(self, _postgres):
             pass
 
-        def execute(self) -> None:
-            return None
+        def execute(self) -> int:
+            return 0
 
-    monkeypatch.setattr(mastodon_app, "Validator", FakeValidator)
+    monkeypatch.setattr(mastodon_app, "MastodonValidator", FakeValidator)
 
     app = mastodon_app.MastodonApp("validator")
 

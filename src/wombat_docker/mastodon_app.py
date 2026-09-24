@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from helper.postgres import PostGres
 from koala import Koala
-from validator import Validator
+from validator import MastodonValidator
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("mastodon")
@@ -49,9 +49,8 @@ class MastodonApp:
             koala.execute()
             return 0
         elif self.stunt_box == "validator":
-            validator = Validator(self.postgres)
-            validator.execute()
-            return 0
+            validator = MastodonValidator(self.postgres)
+            return validator.execute()
         else:
             logger.error("invalid stunt_box option:%s", self.stunt_box)
             return 1

@@ -89,21 +89,40 @@ class SqlHelper:
             return False
 
         task = self._job_task()
+
+        def _peaker_values(observation):
+            if isinstance(observation, dict):
+                return (
+                    int(observation["frequency_hz"]),
+                    float(observation["measured_dbm"]),
+                    float(observation["background_dbm"]),
+                )
+
+            if isinstance(observation, (list, tuple)) and len(observation) == 3:
+                return (
+                    int(observation[0]),
+                    float(observation[1]),
+                    float(observation[2]),
+                )
+
+            raise ValueError(f"invalid peaker observation shape: {observation}")
         
         try:
             for observation in self.jh.raw_json["peakers"]:
+                freq_hz, power_dbm, baseline_dbm = _peaker_values(observation)
+
                 obs = {
-                    "baseline_dbm": observation[2],
-                    "freq_hz": observation[0],
+                    "baseline_dbm": baseline_dbm,
+                    "freq_hz": freq_hz,
                     "load_log_id": load_log_id,
-                    "power_dbm": observation[1],
+                    "power_dbm": power_dbm,
                 }
 
                 self.postgres.observation_insert(obs)
 
                 score = {
                     "crate_name": self.jh.raw_json["crateName"],
-                    "freq_hz": observation[0],
+                    "freq_hz": freq_hz,
                     "peaker_quantity": 1,
                     "task": task,
                 }

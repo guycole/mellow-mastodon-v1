@@ -7,6 +7,7 @@
 import logging
 import os
 from collections import defaultdict
+from abc import ABC, abstractmethod
 
 from helper.json_helper import JsonHelper
 from helper.postgres import PostGres
@@ -16,7 +17,25 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("validator")
 
 
-class Validator:
+class Validator(ABC):
+    @abstractmethod
+    def file_processor(self, gp_file_name: str, json_file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    def execute(self) -> int:
+        pass
+
+    @abstractmethod
+    def file_failure(self, file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    def file_success(self, file_name: str) -> None:
+        pass
+
+
+class MastodonValidator(Validator):
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
@@ -102,7 +121,7 @@ class Validator:
 
         self.file_success_pair(gp_file_name, json_file_name)
 
-    def execute(self) -> None:
+    def execute(self) -> int:
         logger.info("validator fresh dir:%s", self.fresh_dir)
 
         os.chdir(self.fresh_dir)
@@ -118,6 +137,10 @@ class Validator:
             self.file_processor(gp_file_name, json_file_name)
 
         logger.info("validator success:%s failure:%s", self.success, self.failure)
+        return 0
+
+# Keep import compatibility for existing tests/callers.
+Validator = MastodonValidator
 
 # ;;; Local Variables: ***
 # ;;; mode:python ***
