@@ -38,11 +38,11 @@ def _validator() -> Validator:
 
 def test_paired_targets_detects_pairs_and_unpaired() -> None:
     pairs, unpaired = Validator._paired_targets(
-        ["a.gp", "a.json", "b.json", "c.gp", "d.txt"]
+        ["a.csv", "a.json", "b.json", "c.csv", "d.txt"]
     )
 
-    assert pairs == [("a.gp", "a.json")]
-    assert unpaired == ["b.json", "c.gp", "d.txt"]
+    assert pairs == [("a.csv", "a.json")]
+    assert unpaired == ["b.json", "c.csv", "d.txt"]
 
 
 def test_file_processor_success_path(monkeypatch) -> None:
@@ -52,15 +52,15 @@ def test_file_processor_success_path(monkeypatch) -> None:
     monkeypatch.setattr(
         validator,
         "file_success_pair",
-        lambda _gp, _json: calls.__setitem__("success", calls["success"] + 1),
+        lambda _csv, _json: calls.__setitem__("success", calls["success"] + 1),
     )
     monkeypatch.setattr(
         validator,
         "file_failure_pair",
-        lambda _gp, _json: calls.__setitem__("failure", calls["failure"] + 1),
+        lambda _csv, _json: calls.__setitem__("failure", calls["failure"] + 1),
     )
 
-    validator.file_processor("a.gp", "a.json")
+    validator.file_processor("a.csv", "a.json")
 
     assert calls["success"] == 1
     assert calls["failure"] == 0
@@ -74,15 +74,15 @@ def test_file_processor_validation_failure(monkeypatch) -> None:
     monkeypatch.setattr(
         validator,
         "file_success_pair",
-        lambda _gp, _json: calls.__setitem__("success", calls["success"] + 1),
+        lambda _csv, _json: calls.__setitem__("success", calls["success"] + 1),
     )
     monkeypatch.setattr(
         validator,
         "file_failure_pair",
-        lambda _gp, _json: calls.__setitem__("failure", calls["failure"] + 1),
+        lambda _csv, _json: calls.__setitem__("failure", calls["failure"] + 1),
     )
 
-    validator.file_processor("a.gp", "a.json")
+    validator.file_processor("a.csv", "a.json")
 
     assert calls["success"] == 0
     assert calls["failure"] == 1
@@ -92,14 +92,14 @@ def test_execute_processes_pairs_and_unpaired(monkeypatch) -> None:
     validator = _validator()
 
     monkeypatch.setattr("validator.os.chdir", lambda _path: None)
-    monkeypatch.setattr("validator.os.listdir", lambda _path: ["b.json", "a.gp", "a.json"])
+    monkeypatch.setattr("validator.os.listdir", lambda _path: ["b.json", "a.csv", "a.json"])
 
     processed = []
     failed = []
     monkeypatch.setattr(
         validator,
         "file_processor",
-        lambda gp, js: processed.append((gp, js)),
+        lambda csv_name, js: processed.append((csv_name, js)),
     )
     monkeypatch.setattr(
         validator,
@@ -109,5 +109,5 @@ def test_execute_processes_pairs_and_unpaired(monkeypatch) -> None:
 
     validator.execute()
 
-    assert processed == [("a.gp", "a.json")]
+    assert processed == [("a.csv", "a.json")]
     assert failed == ["b.json"]

@@ -27,7 +27,7 @@ Use environment variable stuntbox to select mode.
 
 1. Read fresh directory targets.
 2. Group files by base name.
-3. Process only complete .gp + .json pairs.
+3. Process only complete .csv + .json pairs.
 4. Move unpaired files to failure.
 5. Validate JSON payload and schema/business rules.
 6. Insert load-log and observation records.

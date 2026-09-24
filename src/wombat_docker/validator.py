@@ -19,7 +19,7 @@ logger = logging.getLogger("validator")
 
 class Validator(ABC):
     @abstractmethod
-    def file_processor(self, gp_file_name: str, json_file_name: str) -> None:
+    def file_processor(self, csv_file_name: str, json_file_name: str) -> None:
         pass
 
     @abstractmethod
@@ -93,33 +93,33 @@ class MastodonValidator(Validator):
         unpaired: list[str] = []
 
         for base_name in sorted(grouped.keys()):
-            expected = {".gp", ".json"}
+            expected = {".csv", ".json"}
             if grouped[base_name] == expected:
-                pairs.append((f"{base_name}.gp", f"{base_name}.json"))
+                pairs.append((f"{base_name}.csv", f"{base_name}.json"))
             else:
                 for extension in sorted(grouped[base_name]):
                     unpaired.append(f"{base_name}{extension}")
 
         return pairs, unpaired
 
-    def file_processor(self, gp_file_name: str, json_file_name: str) -> None:
-        logger.info("processing files: %s %s", gp_file_name, json_file_name)
+    def file_processor(self, csv_file_name: str, json_file_name: str) -> None:
+        logger.info("processing files: %s %s", csv_file_name, json_file_name)
 
         if not self.jh.json_file_tester(json_file_name):
             logger.warning("file read failed for %s", json_file_name)
-            self.file_failure_pair(gp_file_name, json_file_name)
+            self.file_failure_pair(csv_file_name, json_file_name)
             return
 
         load_log_id = self.sql_helper.load_log_test(json_file_name)
         if load_log_id < 1:
-            self.file_failure_pair(gp_file_name, json_file_name)
+            self.file_failure_pair(csv_file_name, json_file_name)
             return
 
         if not self.sql_helper.load_obs(load_log_id):
-            self.file_failure_pair(gp_file_name, json_file_name)
+            self.file_failure_pair(csv_file_name, json_file_name)
             return
 
-        self.file_success_pair(gp_file_name, json_file_name)
+        self.file_success_pair(csv_file_name, json_file_name)
 
     def execute(self) -> int:
         logger.info("validator fresh dir:%s", self.fresh_dir)
@@ -133,8 +133,8 @@ class MastodonValidator(Validator):
             logger.info("unpaired target noted: %s", target)
             self.file_failure(target)
 
-        for gp_file_name, json_file_name in pairs:
-            self.file_processor(gp_file_name, json_file_name)
+        for csv_file_name, json_file_name in pairs:
+            self.file_processor(csv_file_name, json_file_name)
 
         logger.info("validator success:%s failure:%s", self.success, self.failure)
         return 0
