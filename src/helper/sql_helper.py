@@ -60,6 +60,13 @@ class SqlHelper:
 
                 inserted = self.postgres.load_log_insert(load_log)
 
+                if inserted is None or inserted.id is None:
+                    # Insert failed (for example unique-key collision); signal caller to skip obs load.
+                    self.logger.warning(
+                        "load_log insert did not return an id for %s", test_file_name
+                    )
+                    return 0
+
                 daily_score = {
                     "crate_name": self.jh.raw_json["crateName"],
                     "file_quantity": 1,

@@ -111,7 +111,7 @@ class MastodonValidator(Validator):
             return
 
         load_log_id = self.sql_helper.load_log_test(json_file_name)
-        if load_log_id < 1:
+        if not isinstance(load_log_id, int) or load_log_id < 1:
             self.file_failure_pair(csv_file_name, json_file_name)
             return
 

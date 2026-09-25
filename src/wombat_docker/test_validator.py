@@ -88,6 +88,28 @@ def test_file_processor_validation_failure(monkeypatch) -> None:
     assert calls["failure"] == 1
 
 
+def test_file_processor_handles_missing_load_log_id(monkeypatch) -> None:
+    validator = _validator()
+    validator.sql_helper.load_log_id = None
+
+    calls = {"success": 0, "failure": 0}
+    monkeypatch.setattr(
+        validator,
+        "file_success_pair",
+        lambda _csv, _json: calls.__setitem__("success", calls["success"] + 1),
+    )
+    monkeypatch.setattr(
+        validator,
+        "file_failure_pair",
+        lambda _csv, _json: calls.__setitem__("failure", calls["failure"] + 1),
+    )
+
+    validator.file_processor("a.csv", "a.json")
+
+    assert calls["success"] == 0
+    assert calls["failure"] == 1
+
+
 def test_execute_processes_pairs_and_unpaired(monkeypatch) -> None:
     validator = _validator()
 
