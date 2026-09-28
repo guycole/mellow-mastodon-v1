@@ -5,18 +5,20 @@
 # Author: G.S. Cole (guycole at gmail dot com)
 #
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Column
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, SmallInteger, String
+from sqlalchemy import BigInteger, Date, DateTime, Float, Integer, SmallInteger, String
 
-from sqlalchemy.orm import registry
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import registry
 
 mapper_registry = registry()
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class DailyScore(Base):
     __tablename__ = "mastodon_daily_score"
@@ -29,7 +31,7 @@ class DailyScore(Base):
     score_date = Column(Date)
     task = Column(String)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crate_name"]
         self.file_quantity = args["file_quantity"]
         self.host_name = args["host_name"]
@@ -39,6 +41,7 @@ class DailyScore(Base):
 
     def __repr__(self):
         return f"daily_score({self.score_date} {self.host_name})"
+
 
 class GeoLoc(Base):
     __tablename__ = "mastodon_geo_loc"
@@ -52,11 +55,11 @@ class GeoLoc(Base):
     longitude = Column(Float)
     site_name = Column(String)
     speed = Column(Float)
-   
-    def __init__(self, args: dict[str, any]):
+
+    def __init__(self, args: dict[str, Any]):
         self.altitude = args["altitude"]
         self.course = args["course"]
-        self.fix_time = args["fix_time"]
+        self.fix_time = args.get("fix_time", datetime.now())
         self.host_name = args["host_name"]
         self.latitude = args["latitude"]
         self.longitude = args["longitude"]
@@ -65,6 +68,7 @@ class GeoLoc(Base):
 
     def __repr__(self):
         return f"geo_loc({self.site_name} {self.host_name})"
+
 
 class LoadLog(Base):
     __tablename__ = "mastodon_load_log"
@@ -80,9 +84,10 @@ class LoadLog(Base):
     obs_time = Column(DateTime)
     peaker_quantity = Column(SmallInteger)
     site_name = Column(String)
+    source_file_name = Column(String)
     task = Column(String)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crate_name"]
         self.epoch_seconds = args["epoch_seconds"]
         self.file_name = args["file_name"]
@@ -93,10 +98,12 @@ class LoadLog(Base):
         self.obs_time = args["obs_time"]
         self.peaker_quantity = args["peaker_quantity"]
         self.site_name = args["site_name"]
+        self.source_file_name = args["source_file_name"]
         self.task = args["task"]
 
     def __repr__(self):
         return f"load_log({self.file_name} {self.obs_time} {self.task} {self.host_name})"
+
 
 class Observation(Base):
     """observation table definition"""
@@ -109,7 +116,7 @@ class Observation(Base):
     load_log_id = Column(BigInteger)
     power_dbm = Column(Float)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.baseline_dbm = args["baseline_dbm"]
         self.freq_hz = args["freq_hz"]
         self.load_log_id = args["load_log_id"]
@@ -117,6 +124,7 @@ class Observation(Base):
 
     def __repr__(self):
         return f"observation({self.load_log_id} {self.freq_hz} {self.baseline_dbm} {self.power_dbm})"
+
 
 class PeakerScore(Base):
     __tablename__ = "mastodon_peaker_score"
@@ -127,7 +135,7 @@ class PeakerScore(Base):
     peaker_quantity = Column(Integer)
     task = Column(String)
 
-    def __init__(self, args: dict[str, any]):
+    def __init__(self, args: dict[str, Any]):
         self.crate_name = args["crate_name"]
         self.freq_hz = args["freq_hz"]
         self.peaker_quantity = args["peaker_quantity"]

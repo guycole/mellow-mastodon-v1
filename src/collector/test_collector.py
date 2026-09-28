@@ -16,7 +16,7 @@ if str(SRC_DIR) not in sys.path:
 if str(COLLECTOR_DIR) not in sys.path:
     sys.path.insert(0, str(COLLECTOR_DIR))
 
-from collector import Collector
+from collector import MastodonCollector
 from helper.json_helper import schema
 from jsonschema import validate
 
@@ -57,7 +57,7 @@ class TestCollector(unittest.TestCase):
         self.addCleanup(lambda: self.SAMPLE_TMP.exists() and self.SAMPLE_TMP.unlink())
 
         with tempfile.TemporaryDirectory() as fresh_dir:
-            collector = Collector(self._collector_args(fresh_dir))
+            collector = MastodonCollector(self._collector_args(fresh_dir))
             start_time = 1750000000
 
             collector.execute(self.SAMPLE_BASE_NAME, start_time)
@@ -71,6 +71,9 @@ class TestCollector(unittest.TestCase):
             validate(instance=payload, schema=schema)
 
             self.assertEqual(payload["fileName"], f"{self.SAMPLE_BASE_NAME}.json")
+            self.assertEqual(
+                payload["sourceFileName"], f"{self.SAMPLE_BASE_NAME}.csv"
+            )
             self.assertEqual(payload["crateName"], "unit-test-crate")
             self.assertEqual(payload["job"]["task"], "anderson-bs1-pk1")
             self.assertEqual(payload["timeStamp"]["epochSeconds"], start_time)
@@ -83,7 +86,7 @@ class TestCollector(unittest.TestCase):
             missing_csv.unlink()
 
         with tempfile.TemporaryDirectory() as fresh_dir:
-            collector = Collector(self._collector_args(fresh_dir))
+            collector = MastodonCollector(self._collector_args(fresh_dir))
             collector.execute(missing_base, 1750000000)
 
             output_path = Path(fresh_dir) / f"{missing_base}.json"

@@ -27,7 +27,7 @@ mkdir ${SUCCESS_DIR}
 #
 # archive everything
 tar -cvzf "${ARCHIVE_DIR}/${FILE_NAME}" ${SOURCE_DIR}
-
+#
 # export only json files
 tar -cvzf "${EXPORT_DIR}/${FILE_NAME}" ${SOURCE_DIR}/*.json
 #

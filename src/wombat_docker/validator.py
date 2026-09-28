@@ -6,8 +6,8 @@
 #
 import logging
 import os
-from collections import defaultdict
 from abc import ABC, abstractmethod
+from collections import defaultdict
 
 from helper.json_helper import JsonHelper
 from helper.postgres import PostGres
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("validator")
 
 
-class Validator(ABC):
+class BaseValidator(ABC):
     @abstractmethod
     def file_processor(self, csv_file_name: str, json_file_name: str) -> None:
         pass
@@ -35,7 +35,7 @@ class Validator(ABC):
         pass
 
 
-class MastodonValidator(Validator):
+class MastodonValidator(BaseValidator):
     def __init__(self, postgres: PostGres):
         self.postgres = postgres
 
