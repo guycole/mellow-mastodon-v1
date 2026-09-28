@@ -8,6 +8,7 @@
 import json
 import logging
 import os
+from typing import Any
 
 from jsonschema import validate
 
@@ -62,6 +63,7 @@ schema = {
         },
         "crateName":    {"type": "string"},
         "fileName":     {"type": "string"},
+        "sourceFileName": {"type": "string"},
         "version":      {"type": "number"},
         "peakers": {
             "type": "array",
@@ -77,11 +79,12 @@ schema = {
             }
         },
     },
-    "required": ["equipment", "geoLoc", "job", "timeStamp", "crateName", "fileName", "version", "peakers"],
+    "required": ["equipment", "geoLoc", "job", "timeStamp", "crateName", "fileName", "sourceFileName", "version", "peakers"],
     "additionalProperties": False
 }
 
 class JsonHelper:
+    """JSON read/validate/write support for mastodon payloads."""
 
     def __init__(self):
         self.raw_json = None
@@ -103,7 +106,7 @@ class JsonHelper:
 
         return True
 
-    def json_file_writer(self, file_name: str, json_data: dict[str, any]) -> bool:
+    def json_file_writer(self, file_name: str, json_data: dict[str, Any]) -> bool:
         try:
             validate(instance=json_data, schema=schema)
         except Exception as error:
@@ -119,8 +122,8 @@ class JsonHelper:
 
         return True
 
-    def json_file_tester(self, file_name) -> bool:
-        if os.path.isfile(file_name) is False:
+    def json_file_tester(self, file_name: str) -> bool:
+        if not os.path.isfile(file_name):
             logger.warning(f"skipping non-file:{file_name}")
             return False
 

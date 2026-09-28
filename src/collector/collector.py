@@ -86,6 +86,7 @@ class MastodonModel(pydantic.BaseModel):
 
     crate_name: str = pydantic.Field(alias="crateName")
     file_name: str = pydantic.Field(alias="fileName")
+    source_file_name: str = pydantic.Field(alias="sourceFileName")
     version: int = 2
     equipment: Equipment
     geo_loc: GeoLoc = pydantic.Field(alias="geoLoc")
@@ -154,6 +155,7 @@ class MastodonCollector(Collector):
         mastodon_model = MastodonModel(
             crateName=self.crate_name,
             fileName=f"{base_file_name}.json",
+            sourceFileName=f"{base_file_name}.csv",
             equipment=self.equipment,
             geoLoc=self.geo_loc,
             job=self.job,
@@ -166,10 +168,6 @@ class MastodonCollector(Collector):
             out_file.write(mastodon_model.model_dump_json(indent=4, by_alias=True))
 
         return 0
-
-
-# Backward-compatible import surface for existing callers/tests.
-Collector = MastodonCollector
 
 #
 # argv[1] = base filename
